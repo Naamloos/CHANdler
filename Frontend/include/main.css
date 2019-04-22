@@ -1,0 +1,40 @@
+*{
+    padding: 0;
+    margin: 0;
+}
+
+#boardmeta{
+    padding: 50px;
+    margin: auto;
+    text-align: center;
+}
+
+#boardthreads{
+    padding-left: 150px;
+    padding-right: 150px;
+    text-align: left;
+}
+
+.thread{
+    margin-bottom: 15px;
+    border: 3px solid black;
+}
+
+.threadheader{
+    border-bottom: 3px solid black;
+}
+
+.threadtext{
+    padding: 20px;
+}
+
+.comment{
+    padding: 15px;
+    padding-left: 30px;
+    border: 2px solid gray;
+    margin: 5px;
+}
+
+.commenttext{
+    padding-left: 10px;
+}
