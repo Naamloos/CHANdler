@@ -13,19 +13,23 @@
     padding-left: 150px;
     padding-right: 150px;
     text-align: left;
+    word-wrap: break-word;
 }
 
 .thread{
     margin-bottom: 15px;
     border: 3px solid black;
+    word-wrap: break-word;
 }
 
 .threadheader{
     border-bottom: 3px solid black;
+    word-wrap: break-word;
 }
 
 .threadtext{
     padding: 20px;
+    word-wrap: break-word;
 }
 
 .comment{
@@ -33,13 +37,16 @@
     padding-left: 30px;
     border: 2px solid gray;
     margin: 5px;
+    word-wrap: break-word;
 }
 
 .commenttext{
     padding-left: 10px;
+    word-wrap: break-word;
 }
 
 #newpost{
     margin: auto;
     text-align: center;
+    word-wrap: break-word;
 }
