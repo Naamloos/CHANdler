@@ -23,7 +23,7 @@ async function getPosts(threadid){
     return posts;
 }
 
-async function makePost(text, username, parentid, board, image, topic){
+async function makePost(text, username, parentid, board, image, topic, password){
     var post = new Object();
     post.text = text;
     post.username = username;
@@ -31,6 +31,7 @@ async function makePost(text, username, parentid, board, image, topic){
     post.boardtag = board;
     post.image = image;
     post.topic = topic;
+    post.generatepass = password;
     await postJson(server + "/api/thread/create/", post);
 }
 
@@ -47,6 +48,23 @@ async function postJson(url, json){
     });
 
     console.log(req);
+
+    return req.status != 400;
+}
+
+async function deleteJson(url, json){
+    var req = await fetch(url, {
+        method: "DELETE",
+        mode: "cors",
+        cache: "no-cache",
+        headers: {
+            "Content-Type": "application/json",
+            // "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: JSON.stringify(json)
+    });
+
+    console.log(await req.text());
 
     return req.status != 400;
 }

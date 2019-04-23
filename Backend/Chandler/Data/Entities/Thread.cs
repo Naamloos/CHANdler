@@ -35,5 +35,11 @@ namespace Chandler.Data.Entities
 
         [Column("ip")]
         public string Ip { get; set; }
+
+        [Column("generatepass")]
+        public string generatepass { get; set; }
+
+        [Column("passwordid")]
+        public int PasswordId { get; set; }
     }
 }

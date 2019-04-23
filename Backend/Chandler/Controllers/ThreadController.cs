@@ -57,9 +57,69 @@ namespace Chandler.Controllers
             if (string.IsNullOrEmpty(newpost.Username))
                 newpost.Username = "Anonymous";
 
+            var passw = newpost.generatepass;
+            int passid = -1;
+            if (!string.IsNullOrEmpty(passw))
+            {
+                var salt = Passworder.GenerateSalt();
+                var genpass = Passworder.GenerateHash(passw, salt);
+                var newpass = new Password()
+                {
+                    Salt = salt,
+                    Hash = genpass.hash,
+                    Cycles = genpass.cycles
+                };
+                ctx.Passwords.Add(newpass);
+                ctx.SaveChanges();
+                passid = newpass.Id;
+            }
+
+
+            ctx = database.GetContext();
+
+            newpost.generatepass = "";
+            newpost.PasswordId = passid;
+
             ctx.Threads.Add(newpost);
             ctx.SaveChanges();
             return true;
+        }
+
+        [HttpDelete("delete")]
+        public ActionResult DeletePost(int postid = -1, [FromBody]string pass = "")
+        {
+            var ctx = database.GetContext();
+
+            if (ctx.Threads.Any(x => x.Id == postid))
+            {
+                var thread = ctx.Threads.First(x => x.Id == postid);
+                if (ctx.Passwords.Any(x => x.Id == thread.PasswordId))
+                {
+                    var passwd = ctx.Passwords.First(x => x.Id == thread.PasswordId);
+
+                    bool passcorrect = Passworder.CompareHash(pass, passwd.Salt, passwd.Hash, passwd.Cycles);
+                    if (passcorrect)
+                    {
+                        ctx.Threads.Remove(thread);
+                        ctx.SaveChanges();
+                        return Ok();
+                    }
+                }
+
+                // failed, trying with master password
+                var mpasswd = ctx.Passwords.First(x => x.Id == -1);
+                bool mpasscorrect = Passworder.CompareHash(pass, mpasswd.Salt, mpasswd.Hash, mpasswd.Cycles);
+
+                if (mpasscorrect)
+                {
+                    ctx.Threads.Remove(thread);
+                    ctx.SaveChanges();
+                    return Ok();
+                }
+
+                return NotFound($"Received wrongpass {pass}");
+            }
+            return NotFound();
         }
     }
 }

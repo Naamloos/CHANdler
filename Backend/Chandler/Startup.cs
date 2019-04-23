@@ -56,46 +56,26 @@ namespace Chandler
             {
                 Name = "Random",
                 Tag = "r",
-                Description = "CHANdler test board / RANDOM",
+                Description = "Random shit",
             });
 
-            ctx.Threads.Add(new Data.Entities.Thread()
+            ctx.Boards.Add(new Data.Entities.Board()
             {
-                BoardTag = "c",
-                Text = "ayy lmao"
+                Name = "Memes",
+                Tag = "m",
+                ImageUrl = "https://img.thedailybeast.com/image/upload/c_crop,d_placeholder_euli9k,h_1440,w_2560,x_0,y_0/dpr_1.5/c_limit,w_1044/fl_lossy,q_auto/v1531451526/180712-Weill--The-Creator-of-Pepe-hero_uionjj",
+                Description = "haha cool and good dank memes",
             });
 
-            ctx.Threads.Add(new Data.Entities.Thread()
-            {
-                BoardTag = "c",
-                Text = "ayy lmao 2"
-            });
+            var salt = Passworder.GenerateSalt();
+            var pass = Passworder.GenerateHash("admin", salt);
 
-            ctx.Threads.Add(new Data.Entities.Thread()
+            ctx.Passwords.Add(new Data.Entities.Password()
             {
-                BoardTag = "r",
-                Text = "ayy lmao 3"
-            });
-
-            ctx.Threads.Add(new Data.Entities.Thread()
-            {
-                BoardTag = "r",
-                Text = "comment to thread id 1",
-                ParentId = 1
-            });
-
-            ctx.Threads.Add(new Data.Entities.Thread()
-            {
-                BoardTag = "r",
-                Text = "comment to thread id 2",
-                ParentId = 2
-            });
-
-            ctx.Threads.Add(new Data.Entities.Thread()
-            {
-                BoardTag = "r",
-                Text = "comment to thread id 3",
-                ParentId = 3
+                Id = -1,
+                Salt = salt,
+                Cycles = pass.cycles,
+                Hash = pass.hash
             });
 
             ctx.SaveChanges();

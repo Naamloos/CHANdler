@@ -48,6 +48,7 @@ async function initializeboard(){
     for(var i = 0; i < elements.length; i++){
         var element = elements[i]
         element.src = board_img;
+        element.style = 'max-height: 180px;';
     }
 
     var threadbox = document.getElementById("boardthreads");
@@ -62,9 +63,10 @@ async function initializeboard(){
         text.className = "threadtext";
         var img = "";
         if(threads[i].image != null || threads[i].image != ""){
-            img = '<a href="' + threads[i].image + '" target="_blank"><img style="max-width: 300px;" src="' + threads[i].image + '"></a>';
+            img = '<a href="' + threads[i].image + '" target="_blank"><img style="max-height: 100px;" src="' + threads[i].image + '"></a>';
         }
-        text.innerHTML = img + '<p>' + threads[i].text + '</p><p><i><a href="new.html?board=' + board_tag + '&parent=' + threads[i].id + '">Reply</a></i></p>';
+        text.innerHTML = img + '<p>' + threads[i].text + '</p><p><i><a href="new.html?board=' + board_tag + '&parent=' + threads[i].id + '">Reply</a></i>'
+            +' <i><a href="delete.html?post='+threads[i].id+'">Delete</a></i></p>';
 
         var thread = document.createElement("div");
         thread.className = "thread";
@@ -79,12 +81,12 @@ async function initializeboard(){
 
                 var img = "";
                 if(comments[j].image != null || comments[j].image != ""){
-                    img = '<a href="' + comments[j].image + '" target="_blank"><img style="max-width: 300px;" src="' + comments[j].image + '"></a>';
+                    img = '<a href="' + comments[j].image + '" target="_blank"><img style="max-height: 100px;" src="' + comments[j].image + '"></a>';
                 }
 
                 console.log(comments[j]);
 
-                commenttext.innerHTML = img + "<p>" + comments[j].text + '</p>';
+                commenttext.innerHTML = img + "<p>" + comments[j].text + '</p><p><i><a href="delete.html?post='+comments[j].id+'">Delete</a></i></p>';;
                 commenttext.className = "commenttext";
 
                 comment.className = "comment";
@@ -130,6 +132,7 @@ async function addpost(){
     var username = form.get("username");
     var text = form.get("text");
     var image = form.get("imageurl");
+    var pw = form.get("password");
 
     console.log(text);
 
@@ -151,8 +154,28 @@ async function addpost(){
     if(image == null){
         image = "";
     }
+    if(pw == null){
+        pw = "";
+    }
 
-    await makePost(text, username, parentid, board, image, "")
+    await makePost(text, username, parentid, board, image, "", pw)
 
     location.href = "index.html?board=" + board;
+}
+
+async function deletepost(){
+    var form = new FormData(document.forms[0]);
+    var urlparams = new URLSearchParams(location.search);
+    var post = urlparams.get("post");
+    
+    var password = form.get("password");
+    
+    if(password == null || post == null){
+        location.href = "boardlist.html";
+        return;
+    }
+
+    await deleteJson(server + "/api/thread/delete?postid=" + post, password);
+
+    location.href = "boardlist.html";
 }

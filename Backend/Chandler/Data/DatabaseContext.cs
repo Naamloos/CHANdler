@@ -11,6 +11,7 @@ namespace Chandler.Data
     {
         public virtual DbSet<Board> Boards { get; set; }
         public virtual DbSet<Thread> Threads { get; set; }
+        public virtual DbSet<Password> Passwords { get; set; }
 
         private string ConnectionString { get; }
         public DatabaseProvider Provider { get; }
