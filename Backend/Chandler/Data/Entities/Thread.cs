@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Threading.Tasks;
@@ -9,8 +10,13 @@ namespace Chandler.Data.Entities
     [Table("thread")]
     public class Thread
     {
+        [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         [Column("id")]
-        public ulong Id { get; set; }
+        public int Id { get; set; }
+
+        [Column("parentid")]
+        public int ParentId { get; set; } = -1;
 
         [Column("boardtag")]
         public string BoardTag { get; set; }
@@ -18,7 +24,7 @@ namespace Chandler.Data.Entities
         [Column("image")]
         public string Image { get; set; } = "";
 
-        [Column("Username")]
+        [Column("username")]
         public string Username { get; set; } = "Anonymous";
 
         [Column("topic")]

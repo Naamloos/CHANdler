@@ -6,10 +6,25 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Page Title</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" type="text/css" media="screen" href="main.css">
-    <script src="main.js"></script>
+    <link rel="stylesheet" type="text/css" media="screen" href="include/main.css">
+    <script src="include/config.js"></script>
+    <script src="include/functions.js"></script>
+    <script src="include/main.js"></script>
 </head>
 <body>
-    new thread
+    <br>
+    <div id="newpost">
+        <form>
+            <input type="text" name="username" placeholder="Anonymous">
+            <br>
+            <br>
+            <textarea name="text" placeholder="Your message..."></textarea>
+            <br>
+            <br>
+            <input type="text" name="imageurl" placeholder="(Optional) Image Url">
+        </form>
+        <br>
+        <button onclick="addpost().then()">Post</button>
+    </div>
 </body>
 </html>

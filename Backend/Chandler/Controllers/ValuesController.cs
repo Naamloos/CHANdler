@@ -22,12 +22,7 @@ namespace Chandler.Controllers
         [HttpGet]
         public ActionResult<IEnumerable<string>> Get()
         {
-            var txt = "";
-            var context = db.GetContext();
-            if(context.Posts.Any())
-                txt = db.GetContext().Posts.First().Text;
-
-            return new string[] { txt };
+            return new string[]{ "" };
         }
 
         // GET api/values/5

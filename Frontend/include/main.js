@@ -51,33 +51,47 @@ async function initializeboard(){
     }
 
     var threadbox = document.getElementById("boardthreads");
-    var threads = getThreads(board_tag);
+    var threads = await getThreads(board_tag);
     for(var i = 0; i < threads.length; i++)
     {
         var header = document.createElement("div");
         header.className = "threadheader";
-        header.innerHTML = "<b>Thread by: " + threads[i].poster + "</b>";
+        header.innerHTML = "<b>Thread by: " + threads[i].username + "</b> ID: " + threads[i].id;
 
         var text = document.createElement("div");
         text.className = "threadtext";
-        text.innerHTML = threads[i].text;
+        var img = "";
+        if(threads[i].image != null || threads[i].image != ""){
+            img = '<a href="' + threads[i].image + '" target="_blank"><img style="max-width: 300px;" src="' + threads[i].image + '"></a>';
+        }
+        text.innerHTML = img + '<p>' + threads[i].text + '</p><p><i><a href="new.html?board=' + board_tag + '&parent=' + threads[i].id + '">Reply</a></i></p>';
 
         var thread = document.createElement("div");
         thread.className = "thread";
 
-        var comments = getPosts(i);
-        for(var j = 0; j <  comments.length; j++){
-            var comment = document.createElement("div");
-            var commenter = document.createElement("p");
-            commenter.innerHTML = "<b>"+"Anonymous"+"</b>";
-            var commenttext = document.createElement("p");
-            commenttext.innerHTML = comments[j];
-            commenttext.className = "commenttext";
+        var comments = await getPosts(threads[i].id);
+        if(comments.length > 0){
+            for(var j = 0; j <  comments.length; j++){
+                var comment = document.createElement("div");
+                var commenter = document.createElement("p");
+                commenter.innerHTML = "<b>"+comments[j].username+"</b> ID: " + comments[j].id;
+                var commenttext = document.createElement("div");
 
-            comment.className = "comment";
-            comment.appendChild(commenter);
-            comment.appendChild(commenttext);
-            text.appendChild(comment);
+                var img = "";
+                if(comments[j].image != null || comments[j].image != ""){
+                    img = '<a href="' + comments[j].image + '" target="_blank"><img style="max-width: 300px;" src="' + comments[j].image + '"></a>';
+                }
+
+                console.log(comments[j]);
+
+                commenttext.innerHTML = img + "<p>" + comments[j].text + '</p>';
+                commenttext.className = "commenttext";
+
+                comment.className = "comment";
+                comment.appendChild(commenter);
+                comment.appendChild(commenttext);
+                text.appendChild(comment);
+            }
         }
         thread.appendChild(header);
         thread.appendChild(text);
@@ -85,6 +99,9 @@ async function initializeboard(){
 
         threadbox.appendChild(thread);
     }
+
+    var newthreadlink = document.getElementById("newthreadlink");
+    newthreadlink.innerHTML = '<a href="new.html?board='+board_tag+'">Post new thread</a>';
 }
 
 async function initializeboardlist(){
@@ -98,4 +115,44 @@ async function initializeboardlist(){
         board.appendChild(link);
         bl.appendChild(board);
     }
+}
+
+async function initializeaddpost(){
+
+}
+
+async function addpost(){
+    var form = new FormData(document.forms[0]);
+    var urlparams = new URLSearchParams(location.search);
+    var board = urlparams.get("board");
+    var parentid = urlparams.get("parent");
+    
+    var username = form.get("username");
+    var text = form.get("text");
+    var image = form.get("imageurl");
+
+    console.log(text);
+
+    if(parentid == null){
+        parentid = -1;
+    }
+    
+    if(board == null){
+        location.href = "boardlist.html";
+        return;
+    }
+    if(text == null){
+        alert("Invalid text!");
+        return;
+    }
+    if(username == null){
+        username = "Anonymous";
+    }
+    if(image == null){
+        image = "";
+    }
+
+    await makePost(text, username, parentid, board, image, "")
+
+    location.href = "index.html?board=" + board;
 }

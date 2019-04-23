@@ -11,35 +11,44 @@ async function getBoardDataAsync(tag){
     return dat;
 }
 
-function getThreads(boardtag){
-    var threads = [];
-
-    var thread = new Object();
-    thread.text = "Anon, your waifu sucks. What do you say?";
-    thread.image = "https://cdn.shopify.com/s/files/1/1061/1924/products/Emoji_Icon_-_Smirk_face_large.png?v=1542436013";
-    thread.poster = "Anonymous";
-    thread.time = 0;
-
-    threads.push(thread);
-
-    var thread = new Object();
-    thread.text = "Another test thread";
-    thread.image = "https://cdn.shopify.com/s/files/1/1061/1924/products/Emoji_Icon_-_Smirk_face_large.png?v=1542436013";
-    thread.poster = "Anonymous";
-    thread.time = 0;
-
-    threads.push(thread);
+async function getThreads(boardtag){
+    var threads = await grabJson(server + "/api/thread?tag=" + boardtag)
 
     return threads;
 }
 
-function getPosts(threadid){
-    if (threadid == 0)
-        var posts = ["That's not very nice of you to say", "fuck you", "lorum ipsum"];
-    if (threadid == 1)
-        var posts = ["big kek", "yoink"];
+async function getPosts(threadid){
+    var posts = await grabJson(server + "/api/thread/post?thread=" + threadid);
 
     return posts;
+}
+
+async function makePost(text, username, parentid, board, image, topic){
+    var post = new Object();
+    post.text = text;
+    post.username = username;
+    post.parentid = parentid;
+    post.boardtag = board;
+    post.image = image;
+    post.topic = topic;
+    await postJson(server + "/api/thread/create/", post);
+}
+
+async function postJson(url, json){
+    var req = await fetch(url, {
+        method: "POST",
+        mode: "cors",
+        cache: "no-cache",
+        headers: {
+            "Content-Type": "application/json",
+            // "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: JSON.stringify(json)
+    });
+
+    console.log(req);
+
+    return req.status != 400;
 }
 
 async function grabJson(url){

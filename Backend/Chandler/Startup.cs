@@ -16,11 +16,13 @@ namespace Chandler
     public class Startup
     {
         private Database _db;
+        private ServerMeta _meta;
 
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
             _db = new Database(DatabaseProvider.InMemory, null);
+            _meta = new ServerMeta();
         }
 
         public IConfiguration Configuration { get; }
@@ -30,6 +32,7 @@ namespace Chandler
         {
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
             services.AddSingleton<Database>(_db);
+            services.AddSingleton<ServerMeta>(_meta);
             services.AddCors(o => o.AddPolicy("publicpolicy", builder =>
             {
                 builder.AllowAnyOrigin()
@@ -40,6 +43,7 @@ namespace Chandler
             var ctx = _db.GetContext();
             ctx.Database.EnsureCreated();
 
+            // insert debug thread data to database
             ctx.Boards.Add(new Data.Entities.Board()
             {
                 Name = "CHANdler",
@@ -53,6 +57,45 @@ namespace Chandler
                 Name = "Random",
                 Tag = "r",
                 Description = "CHANdler test board / RANDOM",
+            });
+
+            ctx.Threads.Add(new Data.Entities.Thread()
+            {
+                BoardTag = "c",
+                Text = "ayy lmao"
+            });
+
+            ctx.Threads.Add(new Data.Entities.Thread()
+            {
+                BoardTag = "c",
+                Text = "ayy lmao 2"
+            });
+
+            ctx.Threads.Add(new Data.Entities.Thread()
+            {
+                BoardTag = "r",
+                Text = "ayy lmao 3"
+            });
+
+            ctx.Threads.Add(new Data.Entities.Thread()
+            {
+                BoardTag = "r",
+                Text = "comment to thread id 1",
+                ParentId = 1
+            });
+
+            ctx.Threads.Add(new Data.Entities.Thread()
+            {
+                BoardTag = "r",
+                Text = "comment to thread id 2",
+                ParentId = 2
+            });
+
+            ctx.Threads.Add(new Data.Entities.Thread()
+            {
+                BoardTag = "r",
+                Text = "comment to thread id 3",
+                ParentId = 3
             });
 
             ctx.SaveChanges();

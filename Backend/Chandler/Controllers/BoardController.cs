@@ -13,9 +13,12 @@ namespace Chandler.Controllers
     public class BoardController : ControllerBase
     {
         private Database database;
-        public BoardController(Database database)
+        private ServerMeta meta;
+
+        public BoardController(Database database, ServerMeta meta)
         {
             this.database = database;
+            this.meta = meta;
         }
 
         [HttpGet]

@@ -38,3 +38,8 @@
 .commenttext{
     padding-left: 10px;
 }
+
+#newpost{
+    margin: auto;
+    text-align: center;
+}
