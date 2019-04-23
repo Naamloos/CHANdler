@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using Chandler.Data;
 using Chandler.Data.Entities;
@@ -74,6 +75,11 @@ namespace Chandler.Controllers
                 passid = newpass.Id;
             }
 
+            var encoder = HtmlEncoder.Default;
+            newpost.Text = encoder.Encode(newpost.Text);
+            newpost.Image = encoder.Encode(newpost.Image);
+            newpost.Username = encoder.Encode(newpost.Username);
+            newpost.Topic = encoder.Encode(newpost.Topic);
 
             ctx = database.GetContext();
 
