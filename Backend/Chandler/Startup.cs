@@ -30,10 +30,31 @@ namespace Chandler
         {
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
             services.AddSingleton<Database>(_db);
+            services.AddCors(o => o.AddPolicy("publicpolicy", builder =>
+            {
+                builder.AllowAnyOrigin()
+                .AllowAnyMethod()
+                .AllowAnyHeader();
+            }));
 
             var ctx = _db.GetContext();
             ctx.Database.EnsureCreated();
-            ctx.Posts.Add(new Data.Entities.Post() { Id = 1, Text = "InMemory Test Post.", ParentId = 0, Image = ""});
+
+            ctx.Boards.Add(new Data.Entities.Board()
+            {
+                Name = "CHANdler",
+                Tag = "c",
+                Description = "CHANdler test board",
+                ImageUrl = "https://i.kym-cdn.com/photos/images/newsfeed/000/779/388/d33.jpg"
+            });
+
+            ctx.Boards.Add(new Data.Entities.Board()
+            {
+                Name = "Random",
+                Tag = "r",
+                Description = "CHANdler test board / RANDOM",
+            });
+
             ctx.SaveChanges();
         }
 
@@ -45,6 +66,7 @@ namespace Chandler
                 app.UseDeveloperExceptionPage();
             }
 
+            app.UseCors("publicpolicy");
             app.UseMvc();
         }
     }

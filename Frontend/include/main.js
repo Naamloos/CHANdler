@@ -1,15 +1,19 @@
-function initializepage(){
+async function initializeboard(){
     var urlparams = new URLSearchParams(location.search);
 
     // test data
     var board_tag = urlparams.get("board");
-    if(board_tag != 'c'){
+    var boardinfo = await getBoardDataAsync(board_tag);
+    if(!boardinfo){
         location.href = "boardlist.html"
         return;
     }
-    var board_title = "CHANdler main test board";
-    var board_welcome = "This is the main test board for CHANdler.";
-    var board_img = "https://i.kym-cdn.com/photos/images/newsfeed/000/779/388/d33.jpg";
+    var board_title = boardinfo.name;
+    var board_welcome = boardinfo.description;
+    var board_img = "";
+    if(boardinfo.imageUrl != null){
+        board_img = boardinfo.imageUrl;
+    }
 
     // insert board info
     var elements = document.getElementsByClassName("board_info");
@@ -80,5 +84,18 @@ function initializepage(){
         // add comments here
 
         threadbox.appendChild(thread);
+    }
+}
+
+async function initializeboardlist(){
+    var bl = document.getElementById("boardlist");
+    var boards = await getBoardsAsync();
+    for(var i = 0; i < boards.length; i++){
+        var board = document.createElement("p");
+        var link = document.createElement("a");
+        link.innerHTML = "/" + boards[i].tag + "/: " + boards[i].name;
+        link.href = "index.html?board=" + boards[i].tag;
+        board.appendChild(link);
+        bl.appendChild(board);
     }
 }

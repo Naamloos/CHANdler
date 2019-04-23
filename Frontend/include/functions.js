@@ -1,5 +1,16 @@
 // mock data for now
 
+async function getBoardsAsync(){
+    var dat = await grabJson(server + "/api/board/");
+    console.log(dat);
+    return dat;
+}
+
+async function getBoardDataAsync(tag){
+    var dat = await grabJson(server + "/api/board/data?tag=" + tag)
+    return dat;
+}
+
 function getThreads(boardtag){
     var threads = [];
 
@@ -29,4 +40,18 @@ function getPosts(threadid){
         var posts = ["big kek", "yoink"];
 
     return posts;
+}
+
+async function grabJson(url){
+    console.log(url);
+    var res = await fetch(url);
+
+    console.log(res);
+
+    if(res.status != 404){
+        var json = await res.json();
+        return json;
+    }
+
+    return false;
 }

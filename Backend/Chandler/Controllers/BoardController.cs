@@ -1,0 +1,48 @@
+﻿using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Chandler.Data;
+using Chandler.Data.Entities;
+
+namespace Chandler.Controllers
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    public class BoardController : ControllerBase
+    {
+        private Database database;
+        public BoardController(Database database)
+        {
+            this.database = database;
+        }
+
+        [HttpGet]
+        public ActionResult<IEnumerable<Board>> GetBoardList()
+        {
+            var ctx = database.GetContext();
+
+            var boards = new List<Board>();
+
+            foreach (var p in ctx.Boards)
+            {
+                boards.Add(p);
+            }
+
+            return boards;
+        }
+
+        [HttpGet("data")]
+        public ActionResult<Board> GetBoardInfo(string tag = "")
+        {
+            var ctx = database.GetContext();
+
+            if(ctx.Boards.Any(x => x.Tag == tag))
+            {
+                return ctx.Boards.First(x => x.Tag == tag);
+            }
+            return this.NotFound("not found");
+        }
+    }
+}
