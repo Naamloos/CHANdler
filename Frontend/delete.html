@@ -14,7 +14,10 @@
 <body>
     <br>
     <div id="newpost">
-        <input type="text" name="password" placeholder="Password...">
+        <form onsubmit="deletepost().then()">
+            <input type="text" name="password" placeholder="Password...">
+        </form>
+        <br>
         <button onclick="deletepost().then()">Delete</button>
         <a href="#" onclick="backtoboard()">Back to board</a>
     </div>

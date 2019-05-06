@@ -14,10 +14,19 @@
 <body>
     <br>
     <div id="newpost">
-        <input type="text" name="username" placeholder="Anonymous">
-        <textarea name="text" placeholder="Your message..."></textarea>
-        <input type="text" name="imageurl" placeholder="(Optional) Image Url">
-        <input type="text" name="password" placeholder="(Optional) Post password">
+        <form onsubmit="addpost().then()">
+            <input type="text" name="username" placeholder="Anonymous">
+            <br>
+            <br>
+            <textarea name="text" placeholder="Your message..."></textarea>
+            <br>
+            <br>
+            <input type="text" name="imageurl" placeholder="(Optional) Image Url">
+            <br>
+            <br>
+            <input type="text" name="password" placeholder="(Optional) Post password">
+        </form>
+        <br>
         <button onclick="addpost().then()">Post</button>
         <a href="#" onclick="backtoboard()">Back to board</a>
     </div>
