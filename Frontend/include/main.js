@@ -65,7 +65,21 @@ async function initializeboard(){
         if(threads[i].image != null || threads[i].image != ""){
             img = '<img class="imgsmall" onclick="imgclick(this)" src="' + threads[i].image + '">';
         }
-        text.innerHTML = img + '<p>' + threads[i].text + '</p><p><i><a href="new.html?board=' + board_tag + '&parent=' + threads[i].id + '">Reply</a></i>'
+
+        var thrtext = threads[i].text;
+        var linkregex = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/g;
+
+        var matches = thrtext.match(linkregex);
+        console.log(matches);
+        if(matches != null){
+            for(var p = 0; p < matches.length; p++){
+                if(matches[p] != null){
+                    thrtext = thrtext.replace(matches[p], '<a href="' + matches[p] + '">'+matches[p]+'</a>');
+                }
+            }
+        }
+
+        text.innerHTML = img + '<p>' + thrtext + '</p><p><i><a href="new.html?board=' + board_tag + '&parent=' + threads[i].id + '">Reply</a></i>'
             +' <i><a href="delete.html?post='+threads[i].id+'&board='+board_tag+'">Delete</a></i></p>';
 
         var thread = document.createElement("div");
@@ -86,7 +100,19 @@ async function initializeboard(){
 
                 console.log(comments[j]);
 
-                commenttext.innerHTML = img + "<p>" + comments[j].text + '</p><p><i><a href="delete.html?post='+comments[j].id+'">Delete</a></i></p>';;
+                var cmtext = comments[j].text;
+                var linkregex = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/g;
+                var matches = cmtext.match(linkregex);
+                console.log(matches);
+                if(matches != null){
+                    for(var p = 0; p < matches.length; p++){
+                        if(matches[p] != null){
+                            cmtext = cmtext.replace(matches[p], '<a href="' + matches[p] + '">'+matches[p]+'</a>');
+                        }
+                    }
+                }
+
+                commenttext.innerHTML = img + "<p>" + cmtext + '</p><p><i><a href="delete.html?post='+comments[j].id+'">Delete</a></i></p>';;
                 commenttext.className = "commenttext";
 
                 comment.className = "comment";
