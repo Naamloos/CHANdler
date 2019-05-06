@@ -78,6 +78,7 @@ async function initializeboard(){
                 }
             }
         }
+        thrtext = thrtext.replace(/(?:\r\n|\r|\n|&#xA;)/g, '<br>');
 
         text.innerHTML = img + '<p>' + thrtext + '</p><p><i><a href="new.html?board=' + board_tag + '&parent=' + threads[i].id + '">Reply</a></i>'
             +' <i><a href="delete.html?post='+threads[i].id+'&board='+board_tag+'">Delete</a></i></p>';
@@ -111,6 +112,8 @@ async function initializeboard(){
                         }
                     }
                 }
+                
+                cmtext = cmtext.replace(/(?:\r\n|\r|\n|&#xA;)/g, '<br>');
 
                 commenttext.innerHTML = img + "<p>" + cmtext + '</p><p><i><a href="delete.html?post='+comments[j].id+'">Delete</a></i></p>';;
                 commenttext.className = "commenttext";
