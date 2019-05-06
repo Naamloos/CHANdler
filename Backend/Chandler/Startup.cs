@@ -1,14 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Chandler.Data;
 
 namespace Chandler
@@ -21,7 +15,7 @@ namespace Chandler
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
-            _db = new Database(DatabaseProvider.InMemory, null);
+            _db = new Database(DatabaseProvider.ServiceProvider, null);
             _meta = new ServerMeta();
         }
 
@@ -30,9 +24,11 @@ namespace Chandler
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
-            services.AddSingleton<Database>(_db);
-            services.AddSingleton<ServerMeta>(_meta);
+            services.AddMvc()
+                .SetCompatibilityVersion(CompatibilityVersion.Version_3_0)
+                .AddMvcOptions(x => x.EnableEndpointRouting = false);
+            services.AddSingleton(_db);
+            services.AddSingleton(_meta);
             services.AddCors(o => o.AddPolicy("publicpolicy", builder =>
             {
                 builder.AllowAnyOrigin()

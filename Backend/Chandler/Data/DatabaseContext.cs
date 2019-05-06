@@ -36,7 +36,11 @@ namespace Chandler.Data
                     break;
 
                 case DatabaseProvider.ServiceProvider:
-                    optionsBuilder.UseInternalServiceProvider(new ServiceCollection().BuildServiceProvider());
+                    optionsBuilder.UseInternalServiceProvider(new ServiceCollection()
+                        .AddSingleton(Boards)
+                        .AddSingleton(Threads)
+                        .AddSingleton(Passwords)
+                        .BuildServiceProvider());
                     break;
 
                 ///EF Core 3.0 is gay
