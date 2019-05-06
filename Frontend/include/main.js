@@ -63,10 +63,10 @@ async function initializeboard(){
         text.className = "threadtext";
         var img = "";
         if(threads[i].image != null || threads[i].image != ""){
-            img = '<a href="' + threads[i].image + '" target="_blank"><img style="max-height: 100px;" src="' + threads[i].image + '"></a>';
+            img = '<img class="imgsmall" onclick="imgclick(this)" src="' + threads[i].image + '">';
         }
         text.innerHTML = img + '<p>' + threads[i].text + '</p><p><i><a href="new.html?board=' + board_tag + '&parent=' + threads[i].id + '">Reply</a></i>'
-            +' <i><a href="delete.html?post='+threads[i].id+'">Delete</a></i></p>';
+            +' <i><a href="delete.html?post='+threads[i].id+'&board='+board_tag+'">Delete</a></i></p>';
 
         var thread = document.createElement("div");
         thread.className = "thread";
@@ -81,7 +81,7 @@ async function initializeboard(){
 
                 var img = "";
                 if(comments[j].image != null || comments[j].image != ""){
-                    img = '<a href="' + comments[j].image + '" target="_blank"><img style="max-height: 100px;" src="' + comments[j].image + '"></a>';
+                    img = '<img class="imgsmall" onclick="imgclick(this)" src="' + comments[j].image + '">';
                 }
 
                 console.log(comments[j]);
@@ -107,6 +107,8 @@ async function initializeboard(){
 }
 
 async function initializeboardlist(){
+    document.title = sitename;
+    
     var bl = document.getElementById("boardlist");
     var boards = await getBoardsAsync();
     for(var i = 0; i < boards.length; i++){
@@ -117,6 +119,12 @@ async function initializeboardlist(){
         board.appendChild(link);
         bl.appendChild(board);
     }
+
+    var name = document.getElementById("sitename");
+    name.innerHTML = "Welcome to " + sitename;
+
+    var logo = document.getElementById("sitelogo");
+    logo.src = sitelogo;
 }
 
 async function initializeaddpost(){
@@ -178,4 +186,21 @@ async function deletepost(){
     await deleteJson(server + "/api/thread/delete?postid=" + post, password);
 
     location.href = "index.html";
+}
+
+function imgclick(image){
+    if(image.classList.contains("imgsmall")){
+        image.classList.remove("imgsmall");
+        image.classList.add("imglarge");
+    }else{
+        image.classList.add("imgsmall");
+        image.classList.remove("imglarge");
+    }
+}
+
+function backtoboard(){
+    var urlparams = new URLSearchParams(location.search);
+    var board = urlparams.get("board");
+
+    location.href="board.html?board=" + board;
 }

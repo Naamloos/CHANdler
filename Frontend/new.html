@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>Page Title</title>
+    <title>New post</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" type="text/css" media="screen" href="include/main.css">
     <script src="include/config.js"></script>
@@ -14,20 +14,12 @@
 <body>
     <br>
     <div id="newpost">
-        <form>
-            <input type="text" name="username" placeholder="Anonymous">
-            <br>
-            <br>
-            <textarea name="text" placeholder="Your message..."></textarea>
-            <br>
-            <br>
-            <input type="text" name="imageurl" placeholder="(Optional) Image Url">
-            <br>
-            <br>
-            <input type="text" name="password" placeholder="(Optional) Post password">
-        </form>
-        <br>
+        <input type="text" name="username" placeholder="Anonymous">
+        <textarea name="text" placeholder="Your message..."></textarea>
+        <input type="text" name="imageurl" placeholder="(Optional) Image Url">
+        <input type="text" name="password" placeholder="(Optional) Post password">
         <button onclick="addpost().then()">Post</button>
+        <a href="#" onclick="backtoboard()">Back to board</a>
     </div>
 </body>
 </html>

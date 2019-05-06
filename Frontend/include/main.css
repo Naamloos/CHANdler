@@ -4,14 +4,14 @@
 }
 
 body{
-    color: whitesmoke;
-    background-color: #262626;
+    color: lightgray;
+    background-color: #151515;
     font-family: arial,helvetica,sans-serif; 
     font-size: 10pt;
 }
 
 a{
-    color: red;
+    color: #BA0000;
 }
 
 #boardmeta{
@@ -32,11 +32,14 @@ a{
     margin-bottom: 15px;
     border: 3px solid #585858;
     word-wrap: break-word;
+    background-color: #262626;
 }
 
 .threadheader{
     border-bottom: 3px solid #585858;
     word-wrap: break-word;
+    color: darkgray;
+    padding: 2px;
 }
 
 .threadtext{
@@ -50,6 +53,7 @@ a{
     border: 2px solid #585858;
     margin: 5px;
     word-wrap: break-word;
+    background-color: #151515;
 }
 
 .commenttext{
@@ -61,4 +65,37 @@ a{
     margin: auto;
     text-align: center;
     word-wrap: break-word;
+}
+
+.imgsmall{
+	max-height: 100px;
+}
+
+.imglarge{
+	max-height: 600px;
+}
+
+#home{
+    border: 2px solid #585858;
+    max-width: 1000px;
+    margin: auto;
+    text-align: center;
+    margin-top: 75px;
+    padding-top: 75px;
+    padding-bottom: 75px;
+    background-color: #262626;
+}
+
+#sitelogo{
+    margin: 25px;
+}
+
+input, textarea, button{
+    margin: auto;
+    display: block;
+    margin-top: 15px;
+}
+
+#sitename{
+    margin-bottom: 15px;
 }
