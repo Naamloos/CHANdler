@@ -74,7 +74,7 @@ async function initializeboard(){
         if(matches != null){
             for(var p = 0; p < matches.length; p++){
                 if(matches[p] != null){
-                    thrtext = thrtext.replace(matches[p], '<a href="' + matches[p] + '">'+matches[p]+'</a>');
+                    thrtext = thrtext.replace(matches[p], '<a href="' + matches[p] + '" target="_blank">'+matches[p]+'</a>');
                 }
             }
         }
@@ -107,7 +107,7 @@ async function initializeboard(){
                 if(matches != null){
                     for(var p = 0; p < matches.length; p++){
                         if(matches[p] != null){
-                            cmtext = cmtext.replace(matches[p], '<a href="' + matches[p] + '">'+matches[p]+'</a>');
+                            cmtext = cmtext.replace(matches[p], '<a href="' + matches[p] + '" target="_blank">'+matches[p]+'</a>');
                         }
                     }
                 }
