@@ -1,9 +1,6 @@
 ﻿using Chandler.Data.Entities;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Chandler.Data
 {
@@ -30,16 +27,22 @@ namespace Chandler.Data
 
             switch (this.Provider)
             {
-                // TODO: postgres and sqlite support.
                 case DatabaseProvider.PostgreSql:
-                    //optionsBuilder.UseNpgsql(this.ConnectionString);
+                    optionsBuilder.UseNpgsql(this.ConnectionString);
+                    break;
 
                 case DatabaseProvider.Sqlite:
-                    //optionsBuilder.UseSqlite(this.ConnectionString);
-
-                case DatabaseProvider.InMemory:
-                    optionsBuilder.UseInMemoryDatabase("chandler");
+                    optionsBuilder.UseSqlite(this.ConnectionString);
                     break;
+
+                case DatabaseProvider.ServiceProvider:
+                    optionsBuilder.UseInternalServiceProvider(new ServiceCollection().BuildServiceProvider());
+                    break;
+
+                ///EF Core 3.0 is gay
+                /*case DatabaseProvider.InMemory:
+                    optionsBuilder.UseInMemoryDatabase("chandler");
+                    break;*/
             }
         }
     }
@@ -48,6 +51,7 @@ namespace Chandler.Data
     {
         PostgreSql,
         Sqlite,
-        InMemory
+        InMemory,
+        ServiceProvider
     }
 }

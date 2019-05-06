@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text.Encodings.Web;
-using System.Threading.Tasks;
 using Chandler.Data;
 using Chandler.Data.Entities;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Chandler.Controllers
@@ -46,7 +43,7 @@ namespace Chandler.Controllers
         }
 
         [HttpPost("create")]
-        public ActionResult<bool> CreatePost([FromBody] Thread newpost)
+        public ActionResult<Thread> CreatePost([FromBody] Thread newpost)
         {
             var ctx = database.GetContext();
 
@@ -88,7 +85,7 @@ namespace Chandler.Controllers
 
             ctx.Threads.Add(newpost);
             ctx.SaveChanges();
-            return true;
+            return newpost;
         }
 
         [HttpDelete("delete")]
