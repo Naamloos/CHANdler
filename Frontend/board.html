@@ -1,20 +1,30 @@
-<!-- PLACEHOLDER PAGE, MAKE LATER -->
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>Page Title</title>
+    <title class="board_info"></title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" type="text/css" media="screen" href="include/main.css">
     <script src="include/config.js"></script>
     <script src="include/functions.js"></script>
     <script src="include/main.js"></script>
+    <link href="https://fonts.googleapis.com/css?family=Tinos" rel="stylesheet"> 
 </head>
-<body>
-    <div id="boardlist">
 
+<body>
+    <div id="boardmeta">
+        <h1 class="board_title"></h1>
+        <p class="board_welcome"></p>
+        <img class="board_img">
+        <p><a href="index.html">Back to board list</a></p>
+        <p id="newthreadlink"></p>
     </div>
-    <script>initializeboardlist().then();</script>
+
+    <div id="boardthreads">
+    </div>
+
+    <script>initializeboard().then();</script>
 </body>
 </html>

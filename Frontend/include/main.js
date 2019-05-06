@@ -5,7 +5,7 @@ async function initializeboard(){
     var board_tag = urlparams.get("board");
     var boardinfo = await getBoardDataAsync(board_tag);
     if(!boardinfo){
-        location.href = "boardlist.html"
+        location.href = "index.html"
         return;
     }
     var board_title = boardinfo.name;
@@ -19,7 +19,7 @@ async function initializeboard(){
     var elements = document.getElementsByClassName("board_info");
     for(var i = 0; i < elements.length; i++){
         var element = elements[i]
-        element.innerHTML = "/" + board_tag + "/: " + board_title;
+        element.innerHTML = "/" + board_tag + "/ - " + board_title;
     }
 
     // insert board welcome
@@ -33,7 +33,7 @@ async function initializeboard(){
     var elements = document.getElementsByClassName("board_title");
     for(var i = 0; i < elements.length; i++){
         var element = elements[i]
-        element.innerHTML = board_title;
+        element.innerHTML = "/" + board_tag + "/ - " + board_title;
     }
 
     // insert board tag
@@ -112,8 +112,8 @@ async function initializeboardlist(){
     for(var i = 0; i < boards.length; i++){
         var board = document.createElement("p");
         var link = document.createElement("a");
-        link.innerHTML = "/" + boards[i].tag + "/: " + boards[i].name;
-        link.href = "index.html?board=" + boards[i].tag;
+        link.innerHTML = "/" + boards[i].tag + "/ - " + boards[i].name;
+        link.href = "board.html?board=" + boards[i].tag;
         board.appendChild(link);
         bl.appendChild(board);
     }
@@ -141,7 +141,7 @@ async function addpost(){
     }
     
     if(board == null){
-        location.href = "boardlist.html";
+        location.href = "index.html";
         return;
     }
     if(text == null){
@@ -160,7 +160,7 @@ async function addpost(){
 
     await makePost(text, username, parentid, board, image, "", pw)
 
-    location.href = "index.html?board=" + board;
+    location.href = "board.html?board=" + board;
 }
 
 async function deletepost(){
@@ -171,11 +171,11 @@ async function deletepost(){
     var password = form.get("password");
     
     if(password == null || post == null){
-        location.href = "boardlist.html";
+        location.href = "index.html";
         return;
     }
 
     await deleteJson(server + "/api/thread/delete?postid=" + post, password);
 
-    location.href = "boardlist.html";
+    location.href = "index.html";
 }

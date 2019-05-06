@@ -3,6 +3,17 @@
     margin: 0;
 }
 
+body{
+    color: whitesmoke;
+    background-color: #262626;
+    font-family: arial,helvetica,sans-serif; 
+    font-size: 10pt;
+}
+
+a{
+    color: red;
+}
+
 #boardmeta{
     padding: 50px;
     margin: auto;
@@ -18,12 +29,12 @@
 
 .thread{
     margin-bottom: 15px;
-    border: 3px solid black;
+    border: 3px solid #585858;
     word-wrap: break-word;
 }
 
 .threadheader{
-    border-bottom: 3px solid black;
+    border-bottom: 3px solid #585858;
     word-wrap: break-word;
 }
 
@@ -35,7 +46,7 @@
 .comment{
     padding: 15px;
     padding-left: 30px;
-    border: 2px solid gray;
+    border: 2px solid #585858;
     margin: 5px;
     word-wrap: break-word;
 }
