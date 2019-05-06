@@ -15,14 +15,15 @@ a{
 }
 
 #boardmeta{
-    padding: 50px;
+    padding-top: 50px;
+    padding-bottom: 50px;
     margin: auto;
     text-align: center;
 }
 
 #boardthreads{
-    padding-left: 150px;
-    padding-right: 150px;
+    max-width: 1000px;
+	margin: auto;
     text-align: left;
     word-wrap: break-word;
 }
