@@ -34,6 +34,15 @@ namespace Chandler.Controllers
             return this.NotFound("not found");
         }
 
+        [Route("single")] 
+        [HttpGet]
+        public ActionResult<Thread> GetSingleThread([FromUrl]int thread_id) 
+        {
+            var ctx = database.GetContext();
+            
+            return ctx.Threads.FirstOrDefault(x => x.Id == thread_id);
+        }
+
         [HttpGet("post")]
         public ActionResult<IEnumerable<Thread>> GetPosts(int thread = -1)
         {
