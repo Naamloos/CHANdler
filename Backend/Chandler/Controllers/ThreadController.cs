@@ -40,7 +40,7 @@ namespace Chandler.Controllers
         {
             var ctx = database.GetContext();
             
-            return ctx.Threads.FirstOrDefault(x => x.Id == thread_id);
+            return ctx.Threads.FirstOrDefault(x => x.Id == id);
         }
 
         [HttpGet("post")]
