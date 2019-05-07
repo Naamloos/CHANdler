@@ -4,22 +4,18 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Chandler.Data;
-using System.IO;
-using Newtonsoft.Json;
 
 namespace Chandler
 {
     public class Startup
     {
-        private ServerConfig _config;
         private Database _db;
         private ServerMeta _meta;
 
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
-            _config = JsonConvert.DeserializeObject<ServerConfig>(File.ReadAllText($"{Directory.GetCurrentDirectory()}/Data/Configs/ServerConfig.json"));
-            _db = new Database(_config.Provider, _config.ConnectionString);
+            _db = new Database(DatabaseProvider.ServiceProvider, null);
             _meta = new ServerMeta();
         }
 
