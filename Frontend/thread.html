@@ -1,17 +1,29 @@
-<!-- PLACEHOLDER PAGE, MAKE LATER -->
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>Thread</title>
+    <title class="board_info"></title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" type="text/css" media="screen" href="include/main.css">
     <script src="include/config.js"></script>
     <script src="include/functions.js"></script>
     <script src="include/main.js"></script>
+    <link href="https://fonts.googleapis.com/css?family=Tinos" rel="stylesheet"> 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
+
 <body>
-    fullthread
+    <div id="boardmeta">
+        <h1 class="board_title"></h1>
+        <img class="board_img">
+        <p id="backlink"></p>
+    </div>
+
+    <div id="thread">
+    </div>
+
+    <script>initializethread().then();</script>
 </body>
 </html>

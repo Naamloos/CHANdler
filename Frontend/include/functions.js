@@ -17,6 +17,12 @@ async function getThreads(boardtag){
     return threads;
 }
 
+async function getThread(id){
+    var thread = await grabJson(server + "/api/thread/single?id=" + id);
+
+    return thread;
+}
+
 async function getPosts(threadid){
     var posts = await grabJson(server + "/api/thread/post?thread=" + threadid);
 
