@@ -10,8 +10,8 @@ namespace Chandler.Controllers
     [ApiController]
     public class BoardController : ControllerBase
     {
-        private Database database;
-        private ServerMeta meta;
+        private readonly Database database;
+        private readonly ServerMeta meta;
 
         public BoardController(Database database, ServerMeta meta)
         {

@@ -1,10 +1,5 @@
 ﻿using Chandler.Data.Entities;
-using JetBrains.Annotations;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Npgsql.EntityFrameworkCore.PostgreSQL.Infrastructure.Internal;
-using System;
-using System.Collections.Generic;
 
 namespace Chandler.Data
 {

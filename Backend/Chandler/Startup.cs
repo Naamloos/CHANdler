@@ -12,8 +12,8 @@ namespace Chandler
     public class Startup
     {
         private ServerConfig _config;
-        private Database _db;
-        private ServerMeta _meta;
+        private readonly Database _db;
+        private readonly ServerMeta _meta;
 
         public Startup(IConfiguration configuration)
         {
@@ -68,14 +68,14 @@ namespace Chandler
             });
 
             var salt = Passworder.GenerateSalt();
-            var pass = Passworder.GenerateHash("admin", salt);
+            var (hash, cycles) = Passworder.GenerateHash("admin", salt);
 
             ctx.Passwords.Add(new Data.Entities.Password()
             {
                 Id = -1,
                 Salt = salt,
-                Cycles = pass.cycles,
-                Hash = pass.hash
+                Cycles = cycles,
+                Hash = hash
             });
 
             ctx.SaveChanges();

@@ -11,8 +11,8 @@ namespace Chandler.Controllers
     [ApiController]
     public class ThreadController : ControllerBase
     {
-        private Database database;
-        private ServerMeta meta;
+        private readonly Database database;
+        private readonly ServerMeta meta;
 
         public ThreadController(Database database, ServerMeta meta)
         {
@@ -36,7 +36,7 @@ namespace Chandler.Controllers
 
         [Route("single")] 
         [HttpGet]
-        public ActionResult<Thread> GetSingleThread([FromUrl]int id) 
+        public ActionResult<Thread> GetSingleThread([FromQuery]int id) 
         {
             var ctx = database.GetContext();
             
@@ -69,12 +69,12 @@ namespace Chandler.Controllers
             if (!string.IsNullOrEmpty(passw))
             {
                 var salt = Passworder.GenerateSalt();
-                var genpass = Passworder.GenerateHash(passw, salt);
+                var (hash, cycles) = Passworder.GenerateHash(passw, salt);
                 var newpass = new Password()
                 {
                     Salt = salt,
-                    Hash = genpass.hash,
-                    Cycles = genpass.cycles
+                    Hash = hash,
+                    Cycles = cycles
                 };
                 ctx.Passwords.Add(newpass);
                 ctx.SaveChanges();
