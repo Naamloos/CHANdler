@@ -43,12 +43,12 @@ namespace Chandler.Controllers
             return ctx.Threads.FirstOrDefault(x => x.Id == id);
         }
 
-        [HttpGet("post")]
-        public ActionResult<IEnumerable<Thread>> GetPosts(int thread = -1)
+        [HttpGet("posts")]
+        public ActionResult<IEnumerable<Thread>> GetPosts(int id = -1)
         {
             var ctx = database.GetContext();
 
-            return ctx.Threads.Where(x => x.ParentId == thread).OrderBy(x => x.Id).ToList();
+            return ctx.Threads.Where(x => x.ParentId == id).OrderBy(x => x.Id).ToList();
         }
 
         [HttpPost("create")]
