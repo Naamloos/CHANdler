@@ -77,7 +77,7 @@ async function initializeboard(){
                 if(matches[p] != null){
                     var isyt = matches[p].match(ytregex);
                     if(isyt){
-                        thrtext = thrtext.replace(matches[p], '<iframe width="320" height="180" src="https://www.youtube.com/embed/'+isyt[5]+'" frameborder="0" allowfullscreen></iframe>')
+                        thrtext = thrtext.replace(matches[p], '<iframe width="320" height="180" src="https://www.youtube.com/embed/'+isyt[5]+'" frameborder="0" allowfullscreen></iframe>');
                     }else{
                         thrtext = thrtext.replace(matches[p], '<a href="' + matches[p] + '" target="_blank">'+matches[p]+'</a>');
                     }
@@ -110,12 +110,18 @@ async function initializeboard(){
 
                 var cmtext = comments[j].text;
                 var linkregex = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/g;
+                var ytregex = /^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$/;
                 var matches = cmtext.match(linkregex);
                 console.log(matches);
                 if(matches != null){
                     for(var p = 0; p < matches.length; p++){
                         if(matches[p] != null){
-                            cmtext = cmtext.replace(matches[p], '<a href="' + matches[p] + '" target="_blank">'+matches[p]+'</a>');
+                            var isyt = matches[p].match(ytregex);
+                            if(isyt){
+                                cmtext = cmtext.replace(matches[p], '<iframe width="320" height="180" src="https://www.youtube.com/embed/'+isyt[5]+'" frameborder="0" allowfullscreen></iframe>');
+                            }else{
+                                cmtext = cmtext.replace(matches[p], '<a href="' + matches[p] + '" target="_blank">'+matches[p]+'</a>');
+                            }
                         }
                     }
                 }
