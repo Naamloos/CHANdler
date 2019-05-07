@@ -68,17 +68,24 @@ async function initializeboard(){
 
         var thrtext = threads[i].text;
         var linkregex = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/g;
+        var ytregex = /^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$/;
 
         var matches = thrtext.match(linkregex);
         console.log(matches);
         if(matches != null){
             for(var p = 0; p < matches.length; p++){
                 if(matches[p] != null){
-                    thrtext = thrtext.replace(matches[p], '<a href="' + matches[p] + '" target="_blank">'+matches[p]+'</a>');
+                    var isyt = matches[p].match(ytregex);
+                    if(isyt){
+                        thrtext = thrtext.replace(matches[p], '<iframe width="320" height="180" src="https://www.youtube.com/embed/'+isyt[5]+'" frameborder="0" allowfullscreen></iframe>')
+                    }else{
+                        thrtext = thrtext.replace(matches[p], '<a href="' + matches[p] + '" target="_blank">'+matches[p]+'</a>');
+                    }
                 }
             }
         }
         thrtext = thrtext.replace(/(?:\r\n|\r|\n|&#xA;)/g, '<br>');
+
 
         text.innerHTML = img + '<p>' + thrtext + '</p><p><i><a href="new.html?board=' + board_tag + '&parent=' + threads[i].id + '">Reply</a></i>'
             +' <i><a href="delete.html?post='+threads[i].id+'&board='+board_tag+'">Delete</a></i></p>';
@@ -234,7 +241,7 @@ function backtoboard(){
     location.href="board.html?board=" + board;
 }
 
-async function initializeboard(){
+async function initializethread(){
     var urlparams = new URLSearchParams(location.search);
 
     var thread = await getThread(urlparams.get("id"));
