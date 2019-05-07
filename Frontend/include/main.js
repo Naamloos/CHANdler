@@ -77,7 +77,7 @@ async function initializeboard(){
                 if(matches[p] != null){
                     var isyt = matches[p].match(ytregex);
                     if(isyt){
-                        thrtext = thrtext.replace(matches[p], '<iframe width="320" height="180" src="https://www.youtube.com/embed/'+isyt[5]+'" frameborder="0" allowfullscreen></iframe>');
+                        thrtext = thrtext.replace(matches[p], '<iframe style="max-width: 80%; width: 320px;" src="https://www.youtube.com/embed/'+isyt[5]+'" frameborder="0" allowfullscreen></iframe>');
                     }else{
                         thrtext = thrtext.replace(matches[p], '<a href="' + matches[p] + '" target="_blank">'+matches[p]+'</a>');
                     }
@@ -118,7 +118,7 @@ async function initializeboard(){
                         if(matches[p] != null){
                             var isyt = matches[p].match(ytregex);
                             if(isyt){
-                                cmtext = cmtext.replace(matches[p], '<iframe width="320" height="180" src="https://www.youtube.com/embed/'+isyt[5]+'" frameborder="0" allowfullscreen></iframe>');
+                                cmtext = cmtext.replace(matches[p], '<iframe style="max-width: 80%; width: 320px;" src="https://www.youtube.com/embed/'+isyt[5]+'" frameborder="0" allowfullscreen></iframe>');
                             }else{
                                 cmtext = cmtext.replace(matches[p], '<a href="' + matches[p] + '" target="_blank">'+matches[p]+'</a>');
                             }
