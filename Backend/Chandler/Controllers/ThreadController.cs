@@ -36,7 +36,7 @@ namespace Chandler.Controllers
 
         [Route("single")] 
         [HttpGet]
-        public ActionResult<Thread> GetSingleThread([FromUrl]int thread_id) 
+        public ActionResult<Thread> GetSingleThread([FromUrl]int id) 
         {
             var ctx = database.GetContext();
             
