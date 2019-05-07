@@ -1,6 +1,10 @@
 ﻿using Chandler.Data.Entities;
+using JetBrains.Annotations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Infrastructure.Internal;
+using System;
+using System.Collections.Generic;
 
 namespace Chandler.Data
 {
@@ -31,31 +35,22 @@ namespace Chandler.Data
                     optionsBuilder.UseNpgsql(this.ConnectionString);
                     break;
 
+                //Broken: SqliteException: SQLite Error 19: 'UNIQUE constraint failed: boards.tag'.
                 case DatabaseProvider.Sqlite:
                     optionsBuilder.UseSqlite(this.ConnectionString);
                     break;
 
-                case DatabaseProvider.ServiceProvider:
-                    optionsBuilder.UseInternalServiceProvider(new ServiceCollection()
-                        .AddSingleton(Boards)
-                        .AddSingleton(Threads)
-                        .AddSingleton(Passwords)
-                        .BuildServiceProvider());
-                    break;
-
-                ///EF Core 3.0 is gay
-                /*case DatabaseProvider.InMemory:
+                case DatabaseProvider.InMemory:
                     optionsBuilder.UseInMemoryDatabase("chandler");
-                    break;*/
+                    break;
             }
         }
     }
 
-    public enum DatabaseProvider
+    public enum DatabaseProvider : int
     {
-        PostgreSql,
-        Sqlite,
-        InMemory,
-        ServiceProvider
+        PostgreSql = 0,
+        Sqlite = 1,
+        InMemory = 2
     }
 }

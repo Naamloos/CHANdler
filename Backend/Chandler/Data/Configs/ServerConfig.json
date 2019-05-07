@@ -1,0 +1,11 @@
+{
+  "dbprovider": 2,
+
+  "dbstring": "",
+
+  //Number of posts that can be sent within <cooldown> mintues
+  "postlimit": 50,
+
+  //Time frame (in minutes) of the limit
+  "cooldown": 60
+}
