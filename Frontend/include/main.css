@@ -33,6 +33,7 @@ a{
     border: 3px solid #585858;
     word-wrap: break-word;
     background-color: #262626;
+    border-radius: 5px;
 }
 
 .threadheader{
@@ -54,6 +55,7 @@ a{
     margin: 5px;
     word-wrap: break-word;
     background-color: #151515;
+    border-radius: 5px;
 }
 
 .commenttext{
@@ -86,6 +88,7 @@ a{
     padding-top: 75px;
     padding-bottom: 75px;
     background-color: #262626;
+    border-radius: 5px;
 }
 
 #sitelogo{
