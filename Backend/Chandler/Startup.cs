@@ -1,11 +1,11 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using Chandler.Data;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Chandler.Data;
-using System.IO;
 using Newtonsoft.Json;
+using System.IO;
 
 namespace Chandler
 {
@@ -28,9 +28,7 @@ namespace Chandler
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc()
-                .SetCompatibilityVersion(CompatibilityVersion.Version_3_0)
-                .AddMvcOptions(x => x.EnableEndpointRouting = false);
+            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
             services.AddSingleton(_db);
             services.AddSingleton(_meta);
             services.AddCors(o => o.AddPolicy("publicpolicy", builder =>
