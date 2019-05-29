@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text.Encodings.Web;
-using System.Threading.Tasks;
 using Chandler.Data;
 using Chandler.Data.Entities;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Chandler.Controllers
@@ -14,8 +11,8 @@ namespace Chandler.Controllers
     [ApiController]
     public class ThreadController : ControllerBase
     {
-        private Database database;
-        private ServerMeta meta;
+        private readonly Database database;
+        private readonly ServerMeta meta;
 
         public ThreadController(Database database, ServerMeta meta)
         {
@@ -37,16 +34,25 @@ namespace Chandler.Controllers
             return this.NotFound("not found");
         }
 
-        [HttpGet("post")]
-        public ActionResult<IEnumerable<Thread>> GetPosts(int thread = -1)
+        [Route("single")] 
+        [HttpGet]
+        public ActionResult<Thread> GetSingleThread([FromQuery]int id) 
+        {
+            var ctx = database.GetContext();
+            
+            return ctx.Threads.FirstOrDefault(x => x.Id == id);
+        }
+
+        [HttpGet("posts")]
+        public ActionResult<IEnumerable<Thread>> GetPosts(int id = -1)
         {
             var ctx = database.GetContext();
 
-            return ctx.Threads.Where(x => x.ParentId == thread).OrderBy(x => x.Id).ToList();
+            return ctx.Threads.Where(x => x.ParentId == id).OrderBy(x => x.Id).ToList();
         }
 
         [HttpPost("create")]
-        public ActionResult<bool> CreatePost([FromBody] Thread newpost)
+        public ActionResult<Thread> CreatePost([FromBody] Thread newpost)
         {
             var ctx = database.GetContext();
 
@@ -63,12 +69,12 @@ namespace Chandler.Controllers
             if (!string.IsNullOrEmpty(passw))
             {
                 var salt = Passworder.GenerateSalt();
-                var genpass = Passworder.GenerateHash(passw, salt);
+                var (hash, cycles) = Passworder.GenerateHash(passw, salt);
                 var newpass = new Password()
                 {
                     Salt = salt,
-                    Hash = genpass.hash,
-                    Cycles = genpass.cycles
+                    Hash = hash,
+                    Cycles = cycles
                 };
                 ctx.Passwords.Add(newpass);
                 ctx.SaveChanges();
@@ -88,7 +94,7 @@ namespace Chandler.Controllers
 
             ctx.Threads.Add(newpost);
             ctx.SaveChanges();
-            return true;
+            return newpost;
         }
 
         [HttpDelete("delete")]

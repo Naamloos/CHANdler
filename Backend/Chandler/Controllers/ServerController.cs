@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Chandler.Data;
-using Microsoft.AspNetCore.Http;
+﻿using Chandler.Data;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Chandler.Controllers
@@ -12,8 +7,8 @@ namespace Chandler.Controllers
     [ApiController]
     public class ServerController : ControllerBase
     {
-        private Database database;
-        private ServerMeta meta;
+        private readonly Database database;
+        private readonly ServerMeta meta;
 
         public ServerController(Database database, ServerMeta meta)
         {

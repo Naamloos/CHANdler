@@ -1,9 +1,5 @@
 ﻿using Chandler.Data.Entities;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Chandler.Data
 {
@@ -30,12 +26,14 @@ namespace Chandler.Data
 
             switch (this.Provider)
             {
-                // TODO: postgres and sqlite support.
                 case DatabaseProvider.PostgreSql:
-                    //optionsBuilder.UseNpgsql(this.ConnectionString);
+                    optionsBuilder.UseNpgsql(this.ConnectionString);
+                    break;
 
+                //Broken: SqliteException: SQLite Error 19: 'UNIQUE constraint failed: boards.tag'.
                 case DatabaseProvider.Sqlite:
-                    //optionsBuilder.UseSqlite(this.ConnectionString);
+                    optionsBuilder.UseSqlite(this.ConnectionString);
+                    break;
 
                 case DatabaseProvider.InMemory:
                     optionsBuilder.UseInMemoryDatabase("chandler");
@@ -44,10 +42,10 @@ namespace Chandler.Data
         }
     }
 
-    public enum DatabaseProvider
+    public enum DatabaseProvider : int
     {
-        PostgreSql,
-        Sqlite,
-        InMemory
+        PostgreSql = 0,
+        Sqlite = 1,
+        InMemory = 2
     }
 }

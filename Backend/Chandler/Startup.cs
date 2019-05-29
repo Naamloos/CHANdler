@@ -1,27 +1,25 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using Chandler.Data;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using Chandler.Data;
+using Newtonsoft.Json;
+using System.IO;
 
 namespace Chandler
 {
     public class Startup
     {
-        private Database _db;
-        private ServerMeta _meta;
+        private ServerConfig _config;
+        private readonly Database _db;
+        private readonly ServerMeta _meta;
 
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
-            _db = new Database(DatabaseProvider.InMemory, null);
+            _config = JsonConvert.DeserializeObject<ServerConfig>(File.ReadAllText($"{Directory.GetCurrentDirectory()}/Data/Configs/ServerConfig.json"));
+            _db = new Database(_config.Provider, _config.ConnectionString);
             _meta = new ServerMeta();
         }
 
@@ -31,8 +29,8 @@ namespace Chandler
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
-            services.AddSingleton<Database>(_db);
-            services.AddSingleton<ServerMeta>(_meta);
+            services.AddSingleton(_db);
+            services.AddSingleton(_meta);
             services.AddCors(o => o.AddPolicy("publicpolicy", builder =>
             {
                 builder.AllowAnyOrigin()
@@ -68,14 +66,14 @@ namespace Chandler
             });
 
             var salt = Passworder.GenerateSalt();
-            var pass = Passworder.GenerateHash("admin", salt);
+            var (hash, cycles) = Passworder.GenerateHash("admin", salt);
 
             ctx.Passwords.Add(new Data.Entities.Password()
             {
                 Id = -1,
                 Salt = salt,
-                Cycles = pass.cycles,
-                Hash = pass.hash
+                Cycles = cycles,
+                Hash = hash
             });
 
             ctx.SaveChanges();
