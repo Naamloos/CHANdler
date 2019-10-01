@@ -32,10 +32,13 @@ namespace Chandler.Controllers
             using var ctx = this.database.GetContext();
             foreach (var sub in ctx.WebhookSubscritptions)
             {
-                var res = await http.PostAsync(sub.Url, new StringContent(JsonConvert.SerializeObject(new DiscordWebhookBody()
+                if (thread.BoardTag == sub.BoardTag || thread.ParentId == sub.ThreadId)
                 {
-                    Content = $"{thread.Username} Posted:\n\n{thread.Text}"
-                })));
+                    var res = await http.PostAsync(sub.Url, new StringContent(JsonConvert.SerializeObject(new DiscordWebhookBody()
+                    {
+                        Content = $"{thread.Username} Posted:\n\n{thread.Text}"
+                    })));
+                }
             }
         }
 
