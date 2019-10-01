@@ -6,8 +6,7 @@ using Chandler.Data.Entities;
 
 namespace Chandler.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
+    [ApiController, Route("api/[controller]")]
     public class BoardController : ControllerBase
     {
         private readonly Database database;
@@ -22,14 +21,11 @@ namespace Chandler.Controllers
         [HttpGet]
         public ActionResult<IEnumerable<Board>> GetBoardList()
         {
-            var ctx = database.GetContext();
+            using var ctx = database.GetContext();
 
             var boards = new List<Board>();
 
-            foreach (var p in ctx.Boards)
-            {
-                boards.Add(p);
-            }
+            foreach (var p in ctx.Boards) boards.Add(p);
 
             return boards;
         }
@@ -37,13 +33,11 @@ namespace Chandler.Controllers
         [HttpGet("data")]
         public ActionResult<Board> GetBoardInfo(string tag = "")
         {
-            var ctx = database.GetContext();
+            using var ctx = database.GetContext();
 
-            if(ctx.Boards.Any(x => x.Tag == tag))
-            {
-                return ctx.Boards.First(x => x.Tag == tag);
-            }
-            return this.NotFound("not found");
+            if(ctx.Boards.Any(x => x.Tag == tag)) return ctx.Boards.First(x => x.Tag == tag);
+
+            return this.NotFound("Not Found");
         }
     }
 }

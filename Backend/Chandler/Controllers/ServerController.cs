@@ -3,8 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Chandler.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
+    [ApiController, Route("api/[controller]")]
     public class ServerController : ControllerBase
     {
         private readonly Database database;
