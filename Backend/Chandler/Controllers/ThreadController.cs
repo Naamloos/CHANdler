@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using Chandler.Data;
@@ -13,7 +15,7 @@ namespace Chandler.Controllers
     [ApiController, Route("api/[controller]")]
     public class ThreadController : ControllerBase
     {
-        private delegate Task PostCreatedEvent(Thread thread);
+        private delegate Task PostCreatedEvent(Thread thread, DiscordWebhookBody body);
         private event PostCreatedEvent PostCreated;
 
         private readonly Database database;
@@ -26,7 +28,7 @@ namespace Chandler.Controllers
             this.PostCreated += this.ThreadController_PostCreated;
         }
 
-        private async Task ThreadController_PostCreated(Thread thread)
+        private async Task ThreadController_PostCreated(Thread thread, DiscordWebhookBody body)
         {
             using var http = new HttpClient();
             using var ctx = this.database.GetContext();
@@ -34,10 +36,9 @@ namespace Chandler.Controllers
             {
                 if (thread.BoardTag == sub.BoardTag || thread.ParentId == sub.ThreadId)
                 {
-                    var res = await http.PostAsync(sub.Url, new StringContent(JsonConvert.SerializeObject(new DiscordWebhookBody()
-                    {
-                        Content = $"{thread.Username} Posted:\n\n{thread.Text}"
-                    })));
+                    var jsondata = JsonConvert.SerializeObject(body);
+                    var res = await http.PostAsync(sub.Url, new StringContent(jsondata, Encoding.UTF8, "application/json"));
+                    var cont = await res.Content.ReadAsStringAsync();
                 }
             }
         }
@@ -57,8 +58,8 @@ namespace Chandler.Controllers
         }
 
         [HttpGet("single")]
-        public ActionResult<Thread> GetSingleThread([FromQuery]int id) => 
-            database.GetContext().Threads.FirstOrDefault(x => x.Id == id);
+        public ActionResult<Thread> GetSingleThread([FromQuery]int id) =>
+            this.database.GetContext().Threads.FirstOrDefault(x => x.Id == id);
 
         [HttpGet("posts")]
         public ActionResult<IEnumerable<Thread>> GetPosts(int id = -1)
@@ -110,7 +111,23 @@ namespace Chandler.Controllers
             await ctx.Threads.AddAsync(newpost);
             await ctx.SaveChangesAsync();
 
-            await this.PostCreated.Invoke(newpost);
+            /*            var body = new DiscordWebhookBody()
+                        {
+                            Content = $"**{newpost.Username}** Posted:",
+                            Embed = new Embed()
+                            {
+                                Title = newpost.Topic,
+                                Description = newpost.Text,
+                                Url = new Uri($"{this.Request.Host}/posts?id={newpost.Id}")
+                            }
+                        };*/
+
+            var body = new DiscordWebhookBody()
+            {
+                Content = $"**{newpost.Username}** Posted:\n__{newpost.Topic}__\n{newpost.Text}"
+            };
+
+            await this.PostCreated.Invoke(newpost, body);
 
             return newpost;
         }

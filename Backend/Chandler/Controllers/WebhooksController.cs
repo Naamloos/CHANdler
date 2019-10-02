@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 
 namespace Chandler.Controllers
 {
-    [Route("[controller]")]
+    [Route("api/[controller]")]
     public class WebhooksController : Controller
     {
         Database Database { get; set; }

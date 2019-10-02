@@ -7,6 +7,7 @@ namespace Chandler.Data.Entities
         [JsonProperty("content")]
         public string Content { get; set; }
 
-        //TODO: Add Embed Support
+        [JsonProperty("embed")]
+        public Embed Embed { get; set; }
     }
 }
