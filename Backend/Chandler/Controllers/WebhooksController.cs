@@ -20,6 +20,8 @@ namespace Chandler.Controllers
             if (!new Regex(@"(https:\/\/(?:canary|)\.discordapp\.com\/api\/webhooks\/[\d].+\/[\wzw].+)").IsMatch(url)) return this.BadRequest("The provided url was not a valid discord webhook url");
 
             using var ctx = this.Database.GetContext();
+            if (ctx.WebhookSubscritptions.FirstOrDefault(x => x.Url == url) != null) return this.BadRequest("The given url has already been added");
+
             var hash = Passworder.GenerateHash(url, secret);
             var whs = new WebhookSubscription()
             {
