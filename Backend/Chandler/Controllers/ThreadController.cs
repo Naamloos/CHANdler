@@ -1,16 +1,23 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
+using System.Text;
 using System.Text.Encodings.Web;
+using System.Threading.Tasks;
 using Chandler.Data;
 using Chandler.Data.Entities;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 
 namespace Chandler.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
+    [ApiController, Route("api/[controller]")]
     public class ThreadController : ControllerBase
     {
+        private delegate Task PostCreatedEvent(Thread thread, DiscordWebhookBody body);
+        private event PostCreatedEvent PostCreated;
+
         private readonly Database database;
         private readonly ServerMeta meta;
 
@@ -18,12 +25,28 @@ namespace Chandler.Controllers
         {
             this.database = database;
             this.meta = meta;
+            this.PostCreated += this.ThreadController_PostCreated;
+        }
+
+        private async Task ThreadController_PostCreated(Thread thread, DiscordWebhookBody body)
+        {
+            using var http = new HttpClient();
+            using var ctx = this.database.GetContext();
+            foreach (var sub in ctx.WebhookSubscritptions)
+            {
+                if (thread.BoardTag == sub.BoardTag || thread.ParentId == sub.ThreadId)
+                {
+                    var jsondata = JsonConvert.SerializeObject(body);
+                    var res = await http.PostAsync(sub.Url, new StringContent(jsondata, Encoding.UTF8, "application/json"));
+                    var cont = await res.Content.ReadAsStringAsync();
+                }
+            }
         }
 
         [HttpGet]
         public ActionResult<IEnumerable<Thread>> GetThreads(string tag = "")
         {
-            var ctx = database.GetContext();
+            using var ctx = database.GetContext();
 
             if (ctx.Threads.Any(x => x.BoardTag == tag && x.ParentId == -1))
             {
@@ -34,32 +57,27 @@ namespace Chandler.Controllers
             return this.NotFound("not found");
         }
 
-        [Route("single")] 
-        [HttpGet]
-        public ActionResult<Thread> GetSingleThread([FromQuery]int id) 
-        {
-            var ctx = database.GetContext();
-            
-            return ctx.Threads.FirstOrDefault(x => x.Id == id);
-        }
+        [HttpGet("single")]
+        public ActionResult<Thread> GetSingleThread([FromQuery]int id) =>
+            this.database.GetContext().Threads.FirstOrDefault(x => x.Id == id);
 
         [HttpGet("posts")]
         public ActionResult<IEnumerable<Thread>> GetPosts(int id = -1)
         {
-            var ctx = database.GetContext();
+            using var ctx = database.GetContext();
 
             return ctx.Threads.Where(x => x.ParentId == id).OrderBy(x => x.Id).ToList();
         }
 
         [HttpPost("create")]
-        public ActionResult<Thread> CreatePost([FromBody] Thread newpost)
+        public async Task<ActionResult<Thread>> CreatePost([FromBody] Thread newpost)
         {
-            var ctx = database.GetContext();
+            using var ctx = database.GetContext();
 
             newpost.Id = 0;
 
             if (string.IsNullOrEmpty(newpost.Text))
-                return BadRequest("text too short");
+                return BadRequest("Text too short");
 
             if (string.IsNullOrEmpty(newpost.Username))
                 newpost.Username = "Anonymous";
@@ -87,20 +105,37 @@ namespace Chandler.Controllers
             newpost.Username = encoder.Encode(newpost.Username);
             newpost.Topic = encoder.Encode(newpost.Topic);
 
-            ctx = database.GetContext();
-
             newpost.generatepass = "";
             newpost.PasswordId = passid;
 
-            ctx.Threads.Add(newpost);
-            ctx.SaveChanges();
+            await ctx.Threads.AddAsync(newpost);
+            await ctx.SaveChangesAsync();
+
+            /*            var body = new DiscordWebhookBody()
+                        {
+                            Content = $"**{newpost.Username}** Posted:",
+                            Embed = new Embed()
+                            {
+                                Title = newpost.Topic,
+                                Description = newpost.Text,
+                                Url = new Uri($"{this.Request.Host}/posts?id={newpost.Id}")
+                            }
+                        };*/
+
+            var body = new DiscordWebhookBody()
+            {
+                Content = $"**{newpost.Username}** Posted:\n__{newpost.Topic}__\n{newpost.Text}"
+            };
+
+            await this.PostCreated.Invoke(newpost, body);
+
             return newpost;
         }
 
         [HttpDelete("delete")]
         public ActionResult DeletePost(int postid = -1, [FromBody]string pass = "")
         {
-            var ctx = database.GetContext();
+            using var ctx = database.GetContext();
 
             if (ctx.Threads.Any(x => x.Id == postid))
             {
