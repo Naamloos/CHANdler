@@ -1,6 +1,8 @@
-﻿using Chandler.Data;
+﻿using AspNetCoreRateLimit;
+using Chandler.Data;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -28,6 +30,18 @@ namespace Chandler
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            #region AspNetCoreRateLimit Stuff
+            //Taken from https://github.com/stefanprodan/AspNetCoreRateLimit/wiki/IpRateLimitMiddleware#setup
+            services.AddOptions();
+            services.AddMemoryCache();
+            services.Configure<IpRateLimitOptions>(Configuration.GetSection("IpRateLimitPolicies"));
+            services.AddSingleton<IIpPolicyStore, MemoryCacheIpPolicyStore>();
+            services.AddSingleton<IRateLimitCounterStore, MemoryCacheRateLimitCounterStore>();
+            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+            services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();            
+            #endregion
+
+            #region General Chandler Stuff
             services.AddMvc(x => x.EnableEndpointRouting = false).SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
             services.AddSingleton(_db);
             services.AddSingleton(_meta);
@@ -77,6 +91,7 @@ namespace Chandler
             });
 
             ctx.SaveChanges();
+            #endregion
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -84,6 +99,7 @@ namespace Chandler
         {
             if (env.EnvironmentName == "Development") app.UseDeveloperExceptionPage();
 
+            app.UseIpRateLimiting();
             app.UseCors("publicpolicy");
             app.UseMvc();
         }
