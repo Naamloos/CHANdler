@@ -28,7 +28,7 @@ namespace Chandler
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+            services.AddMvc(x => x.EnableEndpointRouting = false).SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
             services.AddSingleton(_db);
             services.AddSingleton(_meta);
             services.AddCors(o => o.AddPolicy("publicpolicy", builder =>
@@ -38,7 +38,7 @@ namespace Chandler
                 .AllowAnyHeader();
             }));
 
-            var ctx = _db.GetContext();
+            using var ctx = _db.GetContext();
             ctx.Database.EnsureCreated();
 
             // insert debug thread data to database
@@ -80,12 +80,9 @@ namespace Chandler
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            if (env.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-            }
+            if (env.EnvironmentName == "Development") app.UseDeveloperExceptionPage();
 
             app.UseCors("publicpolicy");
             app.UseMvc();
