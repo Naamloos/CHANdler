@@ -174,16 +174,22 @@ async function initializeaddpost(){
 }
 
 async function addpost(){
-    var form = new FormData(document.forms[0]);
+    //var form = new FormData(document.forms[0]);
     var urlparams = new URLSearchParams(location.search);
     var board = urlparams.get("board");
     var parentid = urlparams.get("parent");
     
-    var username = form.get("username");
+    /*var username = form.get("username");
     var text = form.get("text");
     var image = form.get("imageurl");
-    var pw = form.get("password");
+    var pw = form.get("password");*/
 
+    var fdata = document.forms[0];
+    var username = fdata["username"].innerHTML;
+    var text = fdata["text"].innerHTML;
+    var image = fdata["imageurl"].innerHTML;
+    var pw = fdata["password"].innerHTML;
+    
     console.log(text);
 
     if(parentid == null){

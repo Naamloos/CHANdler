@@ -10,11 +10,5 @@ namespace Chandler
 
         [JsonProperty("dbstring")]
         public string ConnectionString { get; private set; }
-
-        [JsonProperty("postlimit")]
-        public int PostLimit { get; private set; }
-
-        [JsonProperty("cooldown")]
-        public int Cooldown { get; private set; }
     }
 }

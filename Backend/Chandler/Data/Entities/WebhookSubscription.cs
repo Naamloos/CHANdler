@@ -19,10 +19,16 @@ namespace Chandler.Data.Entities
         [Column("threadid")]
         public int? ThreadId { get; set; }
 
-        [Column("hashsecret")]
-        public string HashSecret { get; set; }
+        [Column("hash")]
+        public string Hash { get; set; }
 
         [Column("hashcycles")]
         public int HashCycles { get; set; }
+
+        [Column("hashsalt")]
+        public string HashSalt { get; set; }
+
+        [Column("webhookUrlId")]
+        public ulong UrlId { get; set; }
     }
 }
