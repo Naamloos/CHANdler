@@ -46,6 +46,7 @@ namespace Chandler
             services.AddMvc(x => x.EnableEndpointRouting = false).SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
             services.AddSingleton(_db);
             services.AddSingleton(_meta);
+            services.AddSingleton(_config);
             services.AddCors(o => o.AddPolicy("publicpolicy", builder =>
             {
                 builder.AllowAnyOrigin()
@@ -102,7 +103,14 @@ namespace Chandler
 
             app.UseCors("publicpolicy");
             app.UseIpRateLimiting();
-            app.UseMvc();
+            app.UseStaticFiles();
+            app.UseHttpsRedirection();
+            app.UseMvc(routes =>
+            {
+                routes.MapRoute(
+                    name: "Default",
+                    template: "{controller=Page}/{Action=Index}");
+            });
         }
     }
 }

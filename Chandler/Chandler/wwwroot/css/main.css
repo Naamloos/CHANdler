@@ -69,6 +69,11 @@ a {
     word-wrap: break-word;
 }
 
+.board_img {
+    max-height: 250px;
+    max-width: 90%;
+}
+
 .imgsmall {
     max-height: 100px;
     max-width: 70%;

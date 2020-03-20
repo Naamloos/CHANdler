@@ -69,5 +69,19 @@ namespace Chandler.Controllers
 
             return this.BadRequest("No webhook with the given Id or password could be found");
         }
+
+        [Route("formsub")]
+        public IActionResult FormSub([FromQuery]string url, [FromQuery]string password, [FromQuery]string boardtag = null, [FromQuery]int? threadid = null)
+        {
+            _ = this.SubscribeWebhook(url, password, boardtag, threadid);
+            return Redirect("/");
+        }
+
+        [Route("formunsub")]
+        public IActionResult FormUnsub([FromQuery]string password, [FromQuery]ulong id)
+        {
+            _ = this.UnSubscribeWebhook(password, id);
+            return Redirect("/");
+        }
     }
 }

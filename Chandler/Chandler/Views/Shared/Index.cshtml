@@ -1,0 +1,16 @@
+﻿@model IndexPageModel
+<div id="home">
+    <img id="sitelogo" src="@Model.Config.SiteLogo">
+    <h1 id="sitename">@Model.Config.SiteName</h1>
+    <h2>Stuff:</h2>
+    <div id="stufflist">
+        <a href="/webhooks">Webhook Settings</a>
+    </div>
+    <h2>Boards:</h2>
+    <div id="boardlist">
+        @foreach (var board in Model.Boards)
+        {
+            <a href="/board/@board.Tag">@board.Name (/@board.Tag)</a>
+        }
+    </div>
+</div>

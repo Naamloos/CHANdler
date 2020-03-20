@@ -1,0 +1,25 @@
+﻿@model NewPostPageModel
+<br>
+<div id="newpost">
+    <form action="/api/thread/create">
+        <input type="text" name="username" placeholder="Anonymous">
+        <input type="text" name="topic" placeholder="(Optional) Topic...">
+        @if (Model.IsCommentReply)
+        {
+            <textarea name="text">>>@Model.ReplyToId</textarea>
+        }
+        else
+        {
+            <textarea name="text" placeholder="Your message..."></textarea>
+        }
+        <input type="text" name="imageurl" placeholder="(Optional) Image Url" inputmode="url">
+        <input type="password" name="password" placeholder="(Optional) Post password">
+        <input type="hidden" value="@Model.BoardTag" name="boardtag" style="opacity: 0;" />
+        <input type="hidden" value="@Model.ParentId" name="parent_id" style="opacity: 0;" />
+        <input type="hidden" value="@Model.ReplyToId" name="replytoid" style="opacity: 0;" />
+        <input type="submit" placeholder="Post" />
+    </form>
+
+    <br>
+    <a href="#" onclick="/boards/@Model.BoardTag">Back to board</a>
+</div>
