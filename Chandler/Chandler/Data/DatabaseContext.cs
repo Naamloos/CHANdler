@@ -1,6 +1,5 @@
 ﻿using Chandler.Data.Entities;
 using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
 
 namespace Chandler.Data
 {
@@ -32,7 +31,6 @@ namespace Chandler.Data
                     optionsBuilder.UseNpgsql(this.ConnectionString);
                     break;
 
-                //Broken: SqliteException: SQLite Error 19: 'UNIQUE constraint failed: boards.tag'.
                 case DatabaseProvider.Sqlite:
                     optionsBuilder.UseSqlite(this.ConnectionString);
                     break;

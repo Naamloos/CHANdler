@@ -2,7 +2,6 @@
 using Chandler.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq;
-using System.Net.Http;
 
 namespace Chandler.Controllers
 {
