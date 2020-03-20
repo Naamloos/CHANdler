@@ -13,7 +13,7 @@ namespace Chandler
 {
     public class Startup
     {
-        private ServerConfig _config;
+        private readonly ServerConfig _config;
         private readonly Database _db;
         private readonly ServerMeta _meta;
 
