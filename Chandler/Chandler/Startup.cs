@@ -1,6 +1,8 @@
-﻿using Chandler.Data;
+﻿using AspNetCoreRateLimit;
+using Chandler.Data;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -28,9 +30,23 @@ namespace Chandler
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+            #region AspNetCoreRateLimit Stuff
+            //Taken from https://github.com/stefanprodan/AspNetCoreRateLimit/wiki/IpRateLimitMiddleware#setup
+            services.AddOptions();
+            services.AddMemoryCache();
+            services.Configure<IpRateLimitOptions>(Configuration.GetSection("IpRateLimiting"));
+            services.Configure<IpRateLimitPolicies>(Configuration.GetSection("IpRateLimitPolicies"));
+            services.AddSingleton<IIpPolicyStore, MemoryCacheIpPolicyStore>();
+            services.AddSingleton<IRateLimitCounterStore, MemoryCacheRateLimitCounterStore>();
+            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+            services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
+            #endregion
+
+            #region General Chandler Stuff
+            services.AddMvc(x => x.EnableEndpointRouting = false).SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
             services.AddSingleton(_db);
             services.AddSingleton(_meta);
+            services.AddSingleton(_config);
             services.AddCors(o => o.AddPolicy("publicpolicy", builder =>
             {
                 builder.AllowAnyOrigin()
@@ -38,7 +54,7 @@ namespace Chandler
                 .AllowAnyHeader();
             }));
 
-            var ctx = _db.GetContext();
+            using var ctx = _db.GetContext();
             ctx.Database.EnsureCreated();
 
             // insert debug thread data to database
@@ -77,18 +93,24 @@ namespace Chandler
             });
 
             ctx.SaveChanges();
+            #endregion
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            if (env.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-            }
+            if (env.EnvironmentName == "Development") app.UseDeveloperExceptionPage();
 
             app.UseCors("publicpolicy");
-            app.UseMvc();
+            app.UseIpRateLimiting();
+            app.UseStaticFiles();
+            app.UseHttpsRedirection();
+            app.UseMvc(routes =>
+            {
+                routes.MapRoute(
+                    name: "Default",
+                    template: "{controller=Page}/{Action=Index}");
+            });
         }
     }
 }

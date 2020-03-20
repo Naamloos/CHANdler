@@ -1,0 +1,25 @@
+﻿<div id="addwh">
+    <h1 class="whhone">Add Webhook</h1>
+    <div id="newpost" class="whdiv">
+        <form id="whsubform" action="/api/webhooks/formsub">
+            <input type="text" name="url" placeholder="Webhook URL">
+            <input type="password" name="password" placeholder="password">
+            <input type="text" name="boardtag" placeholder="Board Tag">
+            <input type="submit" />
+        </form>
+        <br>
+    </div>
+    <br>
+    <h1 class="whhone">Remove Webhook</h1>
+    <div id="newpost" class="whdiv">
+        <form id="whsubform" action="/api/webhooks/formunsub">
+            <input type="text" name="id" placeholder="Webhook Id">
+            <input type="text" name="password" placeholder="password">
+            <input type="submit" />
+        </form>
+        <br>
+    </div>
+    <br>
+    <br>
+    <a href="/" style="margin-left:47%;">Back to Home</a>
+</div>

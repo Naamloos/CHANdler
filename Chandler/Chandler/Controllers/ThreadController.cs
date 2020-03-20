@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
@@ -7,31 +6,36 @@ using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using Chandler.Data;
 using Chandler.Data.Entities;
+using Chandler.Models;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 
 namespace Chandler.Controllers
 {
     [ApiController, Route("api/[controller]")]
-    public class ThreadController : ControllerBase
+    public class ThreadController : Controller
     {
         private delegate Task PostCreatedEvent(Thread thread, DiscordWebhookBody body);
         private event PostCreatedEvent PostCreated;
 
         private readonly Database database;
         private readonly ServerMeta meta;
+        private readonly ServerConfig config;
+        private readonly DatabaseContext ctx;
 
-        public ThreadController(Database database, ServerMeta meta)
+        public ThreadController(Database database, ServerMeta meta, ServerConfig conf)
         {
             this.database = database;
             this.meta = meta;
+            this.config = conf;
+            this.ctx = this.database.GetContext();
+            this.ctx.Database.EnsureCreated();
             this.PostCreated += this.ThreadController_PostCreated;
         }
 
         private async Task ThreadController_PostCreated(Thread thread, DiscordWebhookBody body)
         {
             using var http = new HttpClient();
-            using var ctx = this.database.GetContext();
             foreach (var sub in ctx.WebhookSubscritptions)
             {
                 if (thread.BoardTag == sub.BoardTag || thread.ParentId == sub.ThreadId)
@@ -46,8 +50,6 @@ namespace Chandler.Controllers
         [HttpGet]
         public ActionResult<IEnumerable<Thread>> GetThreads(string tag = "")
         {
-            using var ctx = database.GetContext();
-
             if (ctx.Threads.Any(x => x.BoardTag == tag && x.ParentId == -1))
             {
                 return ctx.Threads.Where(x => x.BoardTag == tag && x.ParentId == -1)
@@ -62,18 +64,11 @@ namespace Chandler.Controllers
             this.database.GetContext().Threads.FirstOrDefault(x => x.Id == id);
 
         [HttpGet("posts")]
-        public ActionResult<IEnumerable<Thread>> GetPosts(int id = -1)
-        {
-            using var ctx = database.GetContext();
-
-            return ctx.Threads.Where(x => x.ParentId == id).OrderBy(x => x.Id).ToList();
-        }
+        public ActionResult<IEnumerable<Thread>> GetPosts(int id = -1) => this.ctx.Threads.Where(x => x.ParentId == id).OrderBy(x => x.Id).ToList();
 
         [HttpPost("create")]
         public async Task<ActionResult<Thread>> CreatePost([FromBody] Thread newpost)
         {
-            using var ctx = database.GetContext();
-
             newpost.Id = 0;
 
             if (string.IsNullOrEmpty(newpost.Text))
@@ -82,7 +77,10 @@ namespace Chandler.Controllers
             if (string.IsNullOrEmpty(newpost.Username))
                 newpost.Username = "Anonymous";
 
-            var passw = newpost.generatepass;
+            if (newpost.IsCommentReply && newpost.ParentId == -1)
+                return BadRequest("Expected comment, got parent");
+
+            var passw = newpost.GeneratePassword;
             int passid = -1;
             if (!string.IsNullOrEmpty(passw))
             {
@@ -101,14 +99,16 @@ namespace Chandler.Controllers
 
             var encoder = HtmlEncoder.Default;
             newpost.Text = encoder.Encode(newpost.Text);
-            newpost.Image = encoder.Encode(newpost.Image);
+            if(newpost.Image != null) newpost.Image = encoder.Encode(newpost.Image);
             newpost.Username = encoder.Encode(newpost.Username);
-            newpost.Topic = encoder.Encode(newpost.Topic);
+            if(newpost.Topic != null) newpost.Topic = encoder.Encode(newpost.Topic);
 
-            newpost.generatepass = "";
+            newpost.GeneratePassword = "";
             newpost.PasswordId = passid;
 
             await ctx.Threads.AddAsync(newpost);
+            await ctx.SaveChangesAsync();
+            newpost.Text.Replace("&#xD;&#xA;", "\n").Replace("&gt;", ">");
             await ctx.SaveChangesAsync();
 
             /*            var body = new DiscordWebhookBody()
@@ -132,14 +132,31 @@ namespace Chandler.Controllers
             return newpost;
         }
 
-        [HttpDelete("delete")]
-        public ActionResult DeletePost(int postid = -1, [FromBody]string pass = "")
+        [HttpGet("create")]
+        public async Task<ActionResult<Thread>> CreatePostAndRedirect([FromQuery]string boardtag, [FromQuery]string text, [FromQuery]int parent_id = -1, [FromQuery]string username = null, [FromQuery]string topic = null, [FromQuery]string password = null, [FromQuery]string imageurl = null, [FromQuery]long replytoid = -1)
         {
-            using var ctx = database.GetContext();
+            _ = await CreatePost(new Thread()
+            {
+                BoardTag = boardtag,
+                GeneratePassword = password,
+                Text = text,
+                ParentId = parent_id,
+                Username = username,
+                Image = imageurl,
+                ReplyToId = replytoid,
+                Topic = topic
+            });
 
+            return Redirect($"{this.config.Server}/board/{boardtag}");
+        }
+
+        [HttpDelete("delete")]
+        public ActionResult DeletePostFromBody(int postid = -1, [FromBody]string pass = "")
+        {
             if (ctx.Threads.Any(x => x.Id == postid))
             {
                 var thread = ctx.Threads.First(x => x.Id == postid);
+                var psasdsa = ctx.Passwords.ToArray();
                 if (ctx.Passwords.Any(x => x.Id == thread.PasswordId))
                 {
                     var passwd = ctx.Passwords.First(x => x.Id == thread.PasswordId);
@@ -167,6 +184,27 @@ namespace Chandler.Controllers
                 return NotFound($"Received wrongpass {pass}");
             }
             return NotFound();
+        }
+
+        [HttpGet("delete")]
+        public ActionResult DeletePostFromQuery([FromQuery]int postid = -1, [FromQuery]string password = "", [FromQuery]string board_tag = "c")
+        {
+            var res = DeletePostFromBody(postid, password);
+            if (res.GetType() == typeof(OkResult)) return this.Redirect($"{this.config.Server}/board/{board_tag}");
+
+            /*return this.View($"board/{board_tag}", new BoardPageModel()
+            {
+                BoardInfo = this.ctx.Boards.First(x => x.Tag == board_tag),
+                Threads = this.ctx.Threads.Where(x => x.BoardTag == board_tag)
+            });*/
+
+            else return this.View("Delete", new DeletePageModel()
+            {
+                PostId = postid,
+                Password = password,
+                BoardTag = board_tag,
+                Failed = true
+            });
         }
     }
 }
