@@ -12,10 +12,12 @@
 
 <div id="boardthreads">
     @{
-        var linkreg = new Regex(@"/https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/g");
-        var ytreg = new Regex(@"/^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$/");
+        var linkreg = new Regex(@"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)");
+        var ytreg = new Regex(@"^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$");
         var nlreg = new Regex(@"(?:\r\n|\r|\n|&#xD;&#xA;)");
         var replyidreg = new Regex(@"(?:&gt;&gt;[\d]+)");
+        var ytidreg = new Regex(@"(?:(?:v=[\d\w]+)|(?:be\/[\d\w]+))", RegexOptions.IgnoreCase);
+
         foreach (var mainthread in Model.Threads.Where(x => x.ParentId == 0))
         {
             var a = Model.Threads.ToList();
@@ -24,14 +26,15 @@
                     <p><b>Thread by: @mainthread.Username</b> ID: @mainthread.Id</p>
                 </div>
                 <div class="threadtext">
-                    @if (mainthread.Image != null)
-                    {
-                        <img class="imgsmall" onclick="imgclick(this)" src="@mainthread.Image">
-                    }
                     @{
+                        if (mainthread.Image != null)
+                        {
+                            <img class="imgsmall" onclick="imgclick(this)" src="@mainthread.Image">
+                        }
                         if (ytreg.IsMatch(mainthread.Text))
                         {
-                            <iframe style="max-width: 80%; width: 320px;" src="@mainthread.Text" frameborder="0" allowfullscreen></iframe>
+                            var matchid = ytidreg.Match(mainthread.Text).Captures.FirstOrDefault().Value.Replace("be/", "").Replace("v=", "");
+                            <iframe style="max-width: 80%; width: 320px;" src="http://www.youtube.com/embed/@matchid" frameborder="0" allowfullscreen></iframe>
                         }
                         else if (linkreg.IsMatch(mainthread.Text))
                         {
@@ -64,9 +67,11 @@
 
                                 if (ytreg.IsMatch(mainthread.Text))
                                 {
-                                    <iframe name="comment:@comment.Id" style="max-width: 80%; width: 320px;" src="@mainthread.Text" frameborder="0" allowfullscreen></iframe>
+                                    var matchid = ytidreg.Match(comment.Text).Captures.FirstOrDefault().Value.Replace("be/", "").Replace("v=", "");
+                                    <iframe name="comment:@comment.Id" style="max-width: 80%; width: 320px;" src="http://www.youtube.com/embed/@matchid" frameborder="0" allowfullscreen></iframe>
                                 }
-                                else if (linkreg.IsMatch(mainthread.Text))
+
+                                else if (linkreg.IsMatch(comment.Text))
                                 {
                                     <a name="comment:@comment.Id" href="@mainthread.Text" target="_blank">@mainthread.Text</a>
                                 }
@@ -82,6 +87,7 @@
                         </div>
                     </div>
                 }
+
             </div>
         }
     }

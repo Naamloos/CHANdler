@@ -8,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using System.IO;
+using System.Linq;
 
 namespace Chandler
 {
@@ -57,42 +58,45 @@ namespace Chandler
             using var ctx = _db.GetContext();
             ctx.Database.EnsureCreated();
 
-            // insert debug thread data to database
-            ctx.Boards.Add(new Data.Entities.Board()
+            if (ctx.Boards.Count() == 0)
             {
-                Name = "CHANdler",
-                Tag = "c",
-                Description = "CHANdler test board",
-                ImageUrl = "https://i.kym-cdn.com/photos/images/newsfeed/000/779/388/d33.jpg"
-            });
+                // insert debug thread data to database
+                ctx.Boards.Add(new Data.Entities.Board()
+                {
+                    Name = "CHANdler",
+                    Tag = "c",
+                    Description = "CHANdler test board",
+                    ImageUrl = "https://i.kym-cdn.com/photos/images/newsfeed/000/779/388/d33.jpg"
+                });
 
-            ctx.Boards.Add(new Data.Entities.Board()
-            {
-                Name = "Random",
-                Tag = "r",
-                Description = "Random shit",
-            });
+                ctx.Boards.Add(new Data.Entities.Board()
+                {
+                    Name = "Random",
+                    Tag = "r",
+                    Description = "Random shit",
+                });
 
-            ctx.Boards.Add(new Data.Entities.Board()
-            {
-                Name = "Memes",
-                Tag = "m",
-                ImageUrl = "https://img.thedailybeast.com/image/upload/c_crop,d_placeholder_euli9k,h_1440,w_2560,x_0,y_0/dpr_1.5/c_limit,w_1044/fl_lossy,q_auto/v1531451526/180712-Weill--The-Creator-of-Pepe-hero_uionjj",
-                Description = "haha cool and good dank memes",
-            });
+                ctx.Boards.Add(new Data.Entities.Board()
+                {
+                    Name = "Memes",
+                    Tag = "m",
+                    ImageUrl = "https://img.thedailybeast.com/image/upload/c_crop,d_placeholder_euli9k,h_1440,w_2560,x_0,y_0/dpr_1.5/c_limit,w_1044/fl_lossy,q_auto/v1531451526/180712-Weill--The-Creator-of-Pepe-hero_uionjj",
+                    Description = "haha cool and good dank memes",
+                });
 
-            var salt = Passworder.GenerateSalt();
-            var (hash, cycles) = Passworder.GenerateHash("admin", salt);
+                var salt = Passworder.GenerateSalt();
+                var (hash, cycles) = Passworder.GenerateHash(this._config.DefaultPassword, salt);
 
-            ctx.Passwords.Add(new Data.Entities.Password()
-            {
-                Id = -1,
-                Salt = salt,
-                Cycles = cycles,
-                Hash = hash
-            });
+                ctx.Passwords.Add(new Data.Entities.Password()
+                {
+                    Id = -1,
+                    Salt = salt,
+                    Cycles = cycles,
+                    Hash = hash
+                });
 
-            ctx.SaveChanges();
+                ctx.SaveChanges();
+            }
             #endregion
         }
 

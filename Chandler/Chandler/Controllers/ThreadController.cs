@@ -3,6 +3,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Text.Encodings.Web;
+using System.Text.Unicode;
 using System.Threading.Tasks;
 using Chandler.Data;
 using Chandler.Data.Entities;
@@ -97,18 +98,20 @@ namespace Chandler.Controllers
                 passid = newpass.Id;
             }
 
-            var encoder = HtmlEncoder.Default;
+            var settings = new TextEncoderSettings();
+            settings.AllowRange(UnicodeRanges.All);
+            settings.ForbidCharacters(new[] { '<', '>' });
+            var encoder = HtmlEncoder.Create(settings);
+
             newpost.Text = encoder.Encode(newpost.Text);
             if(newpost.Image != null) newpost.Image = encoder.Encode(newpost.Image);
             newpost.Username = encoder.Encode(newpost.Username);
-            if(newpost.Topic != null) newpost.Topic = encoder.Encode(newpost.Topic);
+            if (newpost.Topic != null) newpost.Topic = encoder.Encode(newpost.Topic);
 
             newpost.GeneratePassword = "";
             newpost.PasswordId = passid;
 
             await ctx.Threads.AddAsync(newpost);
-            await ctx.SaveChangesAsync();
-            newpost.Text.Replace("&#xD;&#xA;", "\n").Replace("&gt;", ">");
             await ctx.SaveChangesAsync();
 
             /*            var body = new DiscordWebhookBody()

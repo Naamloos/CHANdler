@@ -19,5 +19,8 @@ namespace Chandler
 
         [JsonProperty("sitelogo")]
         public string SiteLogo { get; private set; }
+
+        [JsonProperty("defaultpass")]
+        public string DefaultPassword { get; private set; }
     }
 }
