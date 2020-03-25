@@ -1,7 +1,7 @@
 ﻿@model DeletePageModel
 <br>
 <div id="newpost">
-    <form action="/api/thread/delete">
+    <form action="/thread/deletepost">
         <input type="password" name="password" placeholder="Password...">
         <input type="hidden" name="postid" value="@Model.PostId">
         <input type="hidden" name="board_tag" value="@Model.BoardTag">

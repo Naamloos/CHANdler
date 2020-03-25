@@ -9,11 +9,15 @@ using Chandler.Data;
 using Chandler.Data.Entities;
 using Chandler.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyModel.Resolution;
 using Newtonsoft.Json;
 
 namespace Chandler.Controllers
 {
-    [ApiController, Route("api/[controller]")]
+    /// <summary>
+    /// Api Controller For Threads
+    /// </summary>
+    [ApiController, Route("api/[controller]"), Produces("application/json")]
     public class ThreadController : Controller
     {
         private delegate Task PostCreatedEvent(Thread thread, DiscordWebhookBody body);
@@ -24,6 +28,12 @@ namespace Chandler.Controllers
         private readonly ServerConfig config;
         private readonly DatabaseContext ctx;
 
+        /// <summary>
+        /// Thread API Ctor
+        /// </summary>
+        /// <param name="database"></param>
+        /// <param name="meta"></param>
+        /// <param name="conf"></param>
         public ThreadController(Database database, ServerMeta meta, ServerConfig conf)
         {
             this.database = database;
@@ -48,8 +58,14 @@ namespace Chandler.Controllers
             }
         }
 
-        [HttpGet]
-        public ActionResult<IEnumerable<Thread>> GetThreads(string tag = "")
+        /// <summary>
+        /// Returns a list of threads for a given board
+        /// </summary>
+        /// <param name="tag">The board tag</param>
+        /// <returns>IEnunmerable of Thread or empty</returns>
+        /// <response code="200">If the board was found successfully</response>
+        [HttpGet, ProducesResponseType(200)]
+        public ActionResult<IEnumerable<Thread>> GetThreads([FromQuery]string tag)
         {
             if (ctx.Threads.Any(x => x.BoardTag == tag && x.ParentId == -1))
             {
@@ -57,17 +73,39 @@ namespace Chandler.Controllers
                     .OrderByDescending(x => ctx.Threads.Where(y => y.ParentId == x.Id || y.Id == x.Id).Select(y => y.Id).Max())
                     .ToList();
             }
-            return this.NotFound("not found");
+            else return this.NotFound("not found");
         }
 
-        [HttpGet("single")]
+        /// <summary>
+        /// Gets a thread by its ID
+        /// </summary>
+        /// <param name="id">The ID of the thread</param>
+        /// <returns>Thread or empty</returns>
+        /// <response code="200">If the thread was found</response>
+        [HttpGet("single"), ProducesResponseType(200)]
         public ActionResult<Thread> GetSingleThread([FromQuery]int id) =>
             this.database.GetContext().Threads.FirstOrDefault(x => x.Id == id);
 
-        [HttpGet("posts")]
-        public ActionResult<IEnumerable<Thread>> GetPosts(int id = -1) => this.ctx.Threads.Where(x => x.ParentId == id).OrderBy(x => x.Id).ToList();
+        /// <summary>
+        /// Gets posts on a given thread
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns>List of children threads (IEnumerable of Thread)</returns>
+        /// <response code="200">If the thread was found</response>
+        [HttpGet("posts"), ProducesResponseType(200)]
+        public ActionResult<IEnumerable<Thread>> GetPosts([FromQuery]int id)
+        {
+            if (id < 1) return BadRequest("ID must be valid");
+            else return this.ctx.Threads.Where(x => x.ParentId == id).OrderBy(x => x.Id).ToList();
+        }
 
-        [HttpPost("create")]
+        /// <summary>
+        /// Creates a post from post body content
+        /// </summary>
+        /// <param name="newpost">Thread Body</param>
+        /// <returns>Newly posted thread</returns>
+        /// <response code="200">If the thread was created successfully</response>
+        [HttpPost("create"), ProducesResponseType(200)]
         public async Task<ActionResult<Thread>> CreatePost([FromBody] Thread newpost)
         {
             newpost.Id = 0;
@@ -75,11 +113,11 @@ namespace Chandler.Controllers
             if (string.IsNullOrEmpty(newpost.Text))
                 return BadRequest("Text too short");
 
-            if (string.IsNullOrEmpty(newpost.Username))
-                newpost.Username = "Anonymous";
-
             if (newpost.IsCommentReply && newpost.ParentId == -1)
                 return BadRequest("Expected comment, got parent");
+
+            if (string.IsNullOrEmpty(newpost.Username))
+                newpost.Username = "Anonymous";
 
             var passw = newpost.GeneratePassword;
             int passid = -1;
@@ -135,26 +173,15 @@ namespace Chandler.Controllers
             return newpost;
         }
 
-        [HttpGet("create")]
-        public async Task<ActionResult<Thread>> CreatePostAndRedirect([FromQuery]string boardtag, [FromQuery]string text, [FromQuery]int parent_id = -1, [FromQuery]string username = null, [FromQuery]string topic = null, [FromQuery]string password = null, [FromQuery]string imageurl = null, [FromQuery]long replytoid = -1)
-        {
-            _ = await CreatePost(new Thread()
-            {
-                BoardTag = boardtag,
-                GeneratePassword = password,
-                Text = text,
-                ParentId = parent_id,
-                Username = username,
-                Image = imageurl,
-                ReplyToId = replytoid,
-                Topic = topic
-            });
-
-            return Redirect($"{this.config.Server}/board/{boardtag}");
-        }
-
-        [HttpDelete("delete")]
-        public ActionResult DeletePostFromBody(int postid = -1, [FromBody]string pass = "")
+        /// <summary>
+        /// Delete a post via delete request type
+        /// </summary>
+        /// <param name="postid">ID of the most to delete</param>
+        /// <param name="pass">Password to the thread</param>
+        /// <returns>True if thread was deleted</returns>
+        /// <response code="200">If the thread was created successfully</response>
+        [HttpDelete("delete"), ProducesResponseType(200)]
+        public ActionResult<bool> DeletePost([FromQuery]int postid = -1, [FromQuery]string pass = "")
         {
             if (ctx.Threads.Any(x => x.Id == postid))
             {
@@ -163,6 +190,7 @@ namespace Chandler.Controllers
                 if (ctx.Passwords.Any(x => x.Id == thread.PasswordId))
                 {
                     var passwd = ctx.Passwords.First(x => x.Id == thread.PasswordId);
+
 
                     bool passcorrect = Passworder.CompareHash(pass, passwd.Salt, passwd.Hash, passwd.Cycles);
                     if (passcorrect)
@@ -184,30 +212,9 @@ namespace Chandler.Controllers
                     return Ok();
                 }
 
-                return NotFound($"Received wrongpass {pass}");
+                return BadRequest($"Received wrong password: {pass}");
             }
-            return NotFound();
-        }
-
-        [HttpGet("delete")]
-        public ActionResult DeletePostFromQuery([FromQuery]int postid = -1, [FromQuery]string password = "", [FromQuery]string board_tag = "c")
-        {
-            var res = DeletePostFromBody(postid, password);
-            if (res.GetType() == typeof(OkResult)) return this.Redirect($"{this.config.Server}/board/{board_tag}");
-
-            /*return this.View($"board/{board_tag}", new BoardPageModel()
-            {
-                BoardInfo = this.ctx.Boards.First(x => x.Tag == board_tag),
-                Threads = this.ctx.Threads.Where(x => x.BoardTag == board_tag)
-            });*/
-
-            else return this.View("Delete", new DeletePageModel()
-            {
-                PostId = postid,
-                Password = password,
-                BoardTag = board_tag,
-                Failed = true
-            });
+            else return NotFound();
         }
     }
 }

@@ -1,7 +1,7 @@
 ﻿@model NewPostPageModel
 <br>
 <div id="newpost">
-    <form action="/api/thread/create">
+    <form action="/thread/create">
         <input type="text" name="username" placeholder="Anonymous">
         <input type="text" name="topic" placeholder="(Optional) Topic...">
         @if (Model.IsCommentReply)

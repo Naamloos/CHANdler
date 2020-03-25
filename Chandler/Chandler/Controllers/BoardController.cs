@@ -6,18 +6,30 @@ using Chandler.Data.Entities;
 
 namespace Chandler.Controllers
 {
-    [ApiController, Route("api/[controller]")]
+    /// <summary>
+    /// Board Object
+    /// </summary>
+    [ApiController, Route("api/[controller]"), Produces("application/json")]
     public class BoardController : ControllerBase
     {
         private readonly Database database;
         private readonly ServerMeta meta;
-
+        
+        /// <summary>
+        /// Board ctor
+        /// </summary>
+        /// <param name="database"></param>
+        /// <param name="meta"></param>
         public BoardController(Database database, ServerMeta meta)
         {
             this.database = database;
             this.meta = meta;
         }
 
+        /// <summary>
+        /// Returns a list of boards
+        /// </summary>
+        /// <returns>IEnumerable of Board</returns>
         [HttpGet]
         public ActionResult<IEnumerable<Board>> GetBoardList()
         {
@@ -30,8 +42,13 @@ namespace Chandler.Controllers
             return boards;
         }
 
+        /// <summary>
+        /// Returns data on a board
+        /// </summary>
+        /// <param name="tag">The tag of the board</param>
+        /// <returns>Board</returns>
         [HttpGet("data")]
-        public ActionResult<Board> GetBoardInfo(string tag = "")
+        public ActionResult<Board> GetBoardInfo([FromQuery]string tag)
         {
             using var ctx = database.GetContext();
 

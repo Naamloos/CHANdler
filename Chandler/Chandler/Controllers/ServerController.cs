@@ -7,21 +7,37 @@ using System.Threading.Tasks;
 
 namespace Chandler.Controllers
 {
-    [ApiController, Route("api/[controller]")]
+    /// <summary>
+    /// Server object
+    /// </summary>
+    [ApiController, Route("api/[controller]"), Produces("application/json")]
     public class ServerController : ControllerBase
     {
         private readonly Database database;
         private readonly ServerMeta meta;
 
+        /// <summary>
+        /// Server Ctor
+        /// </summary>
+        /// <param name="database"></param>
+        /// <param name="meta"></param>
         public ServerController(Database database, ServerMeta meta)
         {
             this.database = database;
             this.meta = meta;
         }
 
+        /// <summary>
+        /// Get server meta
+        /// </summary>
+        /// <returns>ServerMeta</returns>
         [HttpGet]
         public ActionResult<ServerMeta> GetServerMeta() => this.meta;
 
+        /// <summary>
+        /// Returns the status of the server
+        /// </summary>
+        /// <returns>ServerHealth Object</returns>
         [HttpGet("health")]
         public async Task<ServerHealth> GetHealthStatus()
         {

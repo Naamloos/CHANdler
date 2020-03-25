@@ -4,17 +4,34 @@ using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace Chandler.Controllers
 {
-    [Route("api/[controller]")]
+    /// <summary>
+    /// Webhook controller
+    /// </summary>
+    [Route("api/[controller]"), Produces("application/json")]
     public class WebhooksController : Controller
     {
         Database Database { get; set; }
+
+        /// <summary>
+        /// Webhook Ctor
+        /// </summary>
+        /// <param name="db"></param>
         public WebhooksController(Database db) => this.Database = db;
 
+        /// <summary>
+        /// Subscribes a webhook to the given thread or board
+        /// </summary>
+        /// <param name="url">The webhook's URL</param>
+        /// <param name="password">Password used when removing the webhook</param>
+        /// <param name="boardtag">The tag of the board to listen to</param>
+        /// <param name="threadid">The ID of the thread to listen to</param>
+        /// <returns>WebhookSubscription Object</returns>
         [HttpGet("subscribe")]
-        public ActionResult<WebhookSubscription> SubscribeWebhook([FromQuery]string url, [FromQuery]string password, [FromQuery]string boardtag = null, [FromQuery]int? threadid = null)
+        public async Task<ActionResult<WebhookSubscription>> SubscribeWebhook([FromQuery]string url, [FromQuery]string password, [FromQuery]string boardtag = null, [FromQuery]int? threadid = null)
         {
             using var ctx = this.Database.GetContext();
 
@@ -28,14 +45,22 @@ namespace Chandler.Controllers
 
             var salt = string.Join("", url.Take(new Random().Next(0, url.Length)));
             var hash = Passworder.GenerateHash(password, salt);
+            var pw = new Password()
+            {
+                Cycles = hash.cycles,
+                Hash = hash.hash,
+                Salt = salt
+            };
+
+            this.Database.GetContext().Passwords.Add(pw);
+            await this.Database.GetContext().SaveChangesAsync();
+
             var whs = new WebhookSubscription()
             {
                 BoardTag = boardtag,
                 ThreadId = threadid,
                 Url = url,
-                Hash = hash.hash,
-                HashCycles = hash.cycles,
-                HashSalt = salt,
+                PasswordId = pw.Id,
                 UrlId = ulong.Parse(new Regex(@"(\/[\d].+\/)").Match(url).Value.Replace(@"/", ""))
             };
             ctx.WebhookSubscritptions.Add(whs);
@@ -44,23 +69,35 @@ namespace Chandler.Controllers
             return whs;
         }
 
-        [HttpGet("unsubscribe")] //, HttpDelete("unsubscribe")]
-        public ActionResult<bool> UnSubscribeWebhook([FromQuery]string password, [FromQuery]ulong id)
+        /// <summary>
+        /// Ubsubscribes a webhook
+        /// </summary>
+        /// <param name="passwordid">The ID of the password</param>
+        /// <param name="password">The password</param>
+        /// <param name="id">Webhook's ID</param>
+        /// <returns>True on success</returns>
+        /// <response code="400">When ID is invalid or password is incorrect</response>
+        [HttpDelete("unsubscribe")]
+        public ActionResult<bool> UnSubscribeWebhook([FromQuery]int passwordid, [FromQuery]string password, [FromQuery]ulong id)
         {
-            if (string.IsNullOrEmpty(password)) return this.BadRequest("Password cannot be empty");
             if (id < 1) return this.BadRequest("The webhook Id is required");
             
             using var ctx = this.Database.GetContext();
-            var wh = ctx.WebhookSubscritptions.FirstOrDefault(x => Passworder.CompareHash(password, x.HashSalt, x.Hash, x.HashCycles) && x.UrlId == id);
+            var pw = ctx.Passwords.FirstOrDefault(x => x.Id == passwordid);
+            var validpass = Passworder.CompareHash(password, pw.Salt, pw.Hash, pw.Cycles);
+            var wh = ctx.WebhookSubscritptions.FirstOrDefault(x => x.UrlId == id);
 
-            if (wh == null && id != 0)
+            if (wh == null && id != 0 && !validpass)
             {
                 var mpasswd = ctx.Passwords.First(x => x.Id == -1);
                 var passedcheck = Passworder.CompareHash(password, mpasswd.Salt, mpasswd.Hash, mpasswd.Cycles);
                 if (passedcheck) wh = ctx.WebhookSubscritptions.FirstOrDefault(x => x.UrlId == id);
+                ctx.WebhookSubscritptions.Remove(wh);
+                ctx.SaveChanges();
+                return true;
             }
 
-            if (wh != null)
+            if (wh != null && validpass)
             {
                 ctx.WebhookSubscritptions.Remove(wh);
                 ctx.SaveChanges();
@@ -68,20 +105,6 @@ namespace Chandler.Controllers
             }
 
             return this.BadRequest("No webhook with the given Id or password could be found");
-        }
-
-        [Route("formsub")]
-        public IActionResult FormSub([FromQuery]string url, [FromQuery]string password, [FromQuery]string boardtag = null, [FromQuery]int? threadid = null)
-        {
-            _ = this.SubscribeWebhook(url, password, boardtag, threadid);
-            return Redirect("/");
-        }
-
-        [Route("formunsub")]
-        public IActionResult FormUnsub([FromQuery]string password, [FromQuery]ulong id)
-        {
-            _ = this.UnSubscribeWebhook(password, id);
-            return Redirect("/");
         }
     }
 }
