@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Chandler.Data.Entities
@@ -82,5 +83,11 @@ namespace Chandler.Data.Entities
         /// </summary>
         [Column("iscommentreply")]
         public bool IsCommentReply { get => (this.ReplyToId > -1); }
+
+        /// <summary>
+        /// Child threads for this thread
+        /// </summary>
+        [NotMapped]
+        public IEnumerable<Thread> ChildThreads { get; set; }
     }
 }

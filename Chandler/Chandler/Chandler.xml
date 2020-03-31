@@ -29,6 +29,95 @@
             <param name="tag">The tag of the board</param>
             <returns>Board</returns>
         </member>
+        <member name="T:Chandler.Controllers.PageController">
+            <summary>
+            Page Controller
+            </summary>
+        </member>
+        <member name="M:Chandler.Controllers.PageController.#ctor(Chandler.Data.Database,Chandler.ServerConfig)">
+            <summary>
+            Page Ctor
+            </summary>
+            <param name="db">Database Model</param>
+            <param name="config">Server Configuration</param>
+        </member>
+        <member name="M:Chandler.Controllers.PageController.Index">
+            <summary>
+            Main index page
+            </summary>
+            <returns>Index Page</returns>
+        </member>
+        <member name="M:Chandler.Controllers.PageController.Board(System.String)">
+            <summary>
+            Board page
+            </summary>
+            <param name="tag">Board Tag</param>
+            <returns>Board page for the given board tag</returns>
+        </member>
+        <member name="M:Chandler.Controllers.PageController.New(System.String,System.Int32,System.Int64)">
+            <summary>
+            New thread page
+            </summary>
+            <param name="board">board tag</param>
+            <param name="parent_id">Id of the parent thread</param>
+            <param name="replytoid">Id of the thread this post is replying to</param>
+            <returns>New thread page</returns>
+        </member>
+        <member name="M:Chandler.Controllers.PageController.Delete(System.String,System.Int32)">
+            <summary>
+            Delete thread page
+            </summary>
+            <param name="board_tag">Board tag</param>
+            <param name="id">Id of the thread</param>
+            <returns>Board page</returns>
+        </member>
+        <member name="M:Chandler.Controllers.PageController.Webhooks">
+            <summary>
+            Webhook page
+            </summary>
+            <returns>Webhook page</returns>
+        </member>
+        <member name="M:Chandler.Controllers.PageController.CreatePostAndRedirect(System.String,System.String,System.Int32,System.String,System.String,System.String,System.String,System.Int64)">
+            <summary>
+            Creates a new thread and returns to the board page
+            </summary>
+            <param name="boardtag">Board tag</param>
+            <param name="text">Message text</param>
+            <param name="parent_id">Parent Id of the thread</param>
+            <param name="username">Username to display</param>
+            <param name="topic">Topic of the thread</param>
+            <param name="password">Password to delete the post</param>
+            <param name="imageurl">Url for the post's image</param>
+            <param name="replytoid">Id of the post this post is replying to</param>
+            <returns>Board page</returns>
+        </member>
+        <member name="M:Chandler.Controllers.PageController.DeletePostFromQuery(System.Int32,System.String,System.String)">
+            <summary>
+            Deletes a post using a query
+            </summary>
+            <param name="postid">The id of the post to delete</param>
+            <param name="password">Password to delete the post</param>
+            <param name="board_tag">Board tag</param>
+            <returns>Board page</returns>
+        </member>
+        <member name="M:Chandler.Controllers.PageController.FormSub(System.String,System.String,System.String,System.Nullable{System.Int32})">
+            <summary>
+            Creates a new webhook link and returns to the base server address
+            </summary>
+            <param name="url">Webhook URL</param>
+            <param name="password">Password to delete the webhook</param>
+            <param name="boardtag">Board tag to listen to </param>
+            <param name="threadid">Thread Id to listen to</param>
+            <returns>Main Index Page</returns>
+        </member>
+        <member name="M:Chandler.Controllers.PageController.FormUnsub(System.String,System.UInt64)">
+            <summary>
+            Deletes a webhook link and returns to the base server address
+            </summary>
+            <param name="password">Password to delete webhook</param>
+            <param name="id">Id of the webhook</param>
+            <returns>Main Index Page</returns>
+        </member>
         <member name="T:Chandler.Controllers.ServerController">
             <summary>
             Server object
@@ -66,25 +155,27 @@
             <param name="meta"></param>
             <param name="conf"></param>
         </member>
-        <member name="M:Chandler.Controllers.ThreadController.GetThreads(System.String)">
+        <member name="M:Chandler.Controllers.ThreadController.GetThreads(System.String,System.Boolean)">
             <summary>
             Returns a list of threads for a given board
             </summary>
             <param name="tag">The board tag</param>
+            <param name="includechildren">Whether or not to include the children to a thread</param>
             <returns>IEnunmerable of Thread or empty</returns>
             <response code="200">If the board was found successfully</response>
         </member>
-        <member name="M:Chandler.Controllers.ThreadController.GetSingleThread(System.Int32)">
+        <member name="M:Chandler.Controllers.ThreadController.GetSingleThread(System.Int32,System.Boolean)">
             <summary>
             Gets a thread by its ID
             </summary>
             <param name="id">The ID of the thread</param>
+            <param name="includechildren">Whether or not to include the children to a thread</param>
             <returns>Thread or empty</returns>
             <response code="200">If the thread was found</response>
         </member>
         <member name="M:Chandler.Controllers.ThreadController.GetPosts(System.Int32)">
             <summary>
-            Gets posts on a given thread
+            Gets child posts on a given thread
             </summary>
             <param name="id"></param>
             <returns>List of children threads (IEnumerable of Thread)</returns>
@@ -138,6 +229,62 @@
             <returns>True on success</returns>
             <response code="400">When ID is invalid or password is incorrect</response>
         </member>
+        <member name="T:Chandler.Data.Database">
+            <summary>
+            Database Object
+            </summary>
+        </member>
+        <member name="M:Chandler.Data.Database.#ctor(Chandler.Data.Entities.DatabaseProvider,System.String)">
+            <summary>
+            Database Ctor
+            </summary>
+            <param name="provider">Database Provider</param>
+            <param name="cstr">Database Connection String</param>
+        </member>
+        <member name="M:Chandler.Data.Database.GetContext">
+            <summary>
+            Get the current database context
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:Chandler.Data.DatabaseContext">
+            <summary>
+            Database Context Object
+            </summary>
+        </member>
+        <member name="P:Chandler.Data.DatabaseContext.Boards">
+            <summary>
+            List of boards
+            </summary>
+        </member>
+        <member name="P:Chandler.Data.DatabaseContext.Threads">
+            <summary>
+            List of threads
+            </summary>
+        </member>
+        <member name="P:Chandler.Data.DatabaseContext.Passwords">
+            <summary>
+            List of passwords
+            </summary>
+        </member>
+        <member name="P:Chandler.Data.DatabaseContext.WebhookSubscritptions">
+            <summary>
+            List of webhook subscriptions
+            </summary>
+        </member>
+        <member name="M:Chandler.Data.DatabaseContext.#ctor(Chandler.Data.Entities.DatabaseProvider,System.String)">
+            <summary>
+            DatabaseContext Ctor
+            </summary>
+            <param name="provider">Database Provider</param>
+            <param name="cstring">Database Connection String</param>
+        </member>
+        <member name="M:Chandler.Data.DatabaseContext.OnConfiguring(Microsoft.EntityFrameworkCore.DbContextOptionsBuilder)">
+            <summary>
+            Overridden version of OnConfiguring
+            </summary>
+            <param name="optionsBuilder">DbContextOptionsBuilder</param>
+        </member>
         <member name="T:Chandler.Data.Entities.Board">
             <summary>
             Board Object
@@ -166,6 +313,101 @@
         <member name="P:Chandler.Data.Entities.Board.Motd">
             <summary>
             The board's message of the day
+            </summary>
+        </member>
+        <member name="T:Chandler.Data.Entities.DatabaseProvider">
+            <summary>
+            Database Provider Enum
+            </summary>
+        </member>
+        <member name="F:Chandler.Data.Entities.DatabaseProvider.PostgreSql">
+            <summary>
+            Use PostgreSQL
+            </summary>
+        </member>
+        <member name="F:Chandler.Data.Entities.DatabaseProvider.Sqlite">
+            <summary>
+            Use SQLite
+            </summary>
+        </member>
+        <member name="F:Chandler.Data.Entities.DatabaseProvider.InMemory">
+            <summary>
+            Use an in memory datebase
+            </summary>
+        </member>
+        <member name="T:Chandler.Data.Entities.DiscordWebhookBody">
+            <summary>
+            Webhook Body Object
+            </summary>
+        </member>
+        <member name="P:Chandler.Data.Entities.DiscordWebhookBody.Content">
+            <summary>
+            Message content
+            </summary>
+        </member>
+        <member name="P:Chandler.Data.Entities.DiscordWebhookBody.Embed">
+            <summary>
+            Message Embed
+            </summary>
+        </member>
+        <member name="T:Chandler.Data.Entities.Embed">
+            <summary>
+            Discord Embed Object
+            </summary>
+        </member>
+        <member name="P:Chandler.Data.Entities.Embed.Title">
+            <summary>
+            Embed Title
+            </summary>
+        </member>
+        <member name="P:Chandler.Data.Entities.Embed.Type">
+            <summary>
+            Embed Type
+            </summary>
+        </member>
+        <member name="P:Chandler.Data.Entities.Embed.Description">
+            <summary>
+            Embed Description
+            </summary>
+        </member>
+        <member name="P:Chandler.Data.Entities.Embed.Url">
+            <summary>
+            Embed Url
+            </summary>
+        </member>
+        <member name="P:Chandler.Data.Entities.Embed.Timestamp">
+            <summary>
+            Embed Timestamp
+            </summary>
+        </member>
+        <member name="P:Chandler.Data.Entities.Embed.Colour">
+            <summary>
+            Embed Colour
+            </summary>
+        </member>
+        <member name="T:Chandler.Data.Entities.Password">
+            <summary>
+            Password Table Class
+            </summary>
+        </member>
+        <member name="P:Chandler.Data.Entities.Password.Id">
+            <summary>
+            Id of the password (Public key)
+            </summary>
+        </member>
+        <member name="P:Chandler.Data.Entities.Password.Hash">
+            <summary>
+            Password Hash
+            </summary>
+        </member>
+        <member name="P:Chandler.Data.Entities.Password.Salt">
+            <summary>
+            Password Salt
+            </summary>
+        </member>
+        <member name="P:Chandler.Data.Entities.Password.Cycles">
+            <summary>
+            Password Cycles
             </summary>
         </member>
         <member name="T:Chandler.Data.Entities.ServerHealth">
@@ -268,6 +510,11 @@
             Whether or not the comment is a reply
             </summary>
         </member>
+        <member name="P:Chandler.Data.Entities.Thread.ChildThreads">
+            <summary>
+            Child threads for this thread
+            </summary>
+        </member>
         <member name="T:Chandler.Data.Entities.WebhookSubscription">
             <summary>
             Webhook Subscription Object
@@ -302,6 +549,184 @@
             <summary>
             ID of the webhook
             </summary>
+        </member>
+        <member name="T:Chandler.Data.ServerMeta">
+            <summary>
+            Server Meta
+            </summary>
+        </member>
+        <member name="P:Chandler.Data.ServerMeta.StartTime">
+            <summary>
+            Time the server started
+            </summary>
+        </member>
+        <member name="P:Chandler.Data.ServerMeta.UpTime">
+            <summary>
+            Total amount of time the server has been active for
+            </summary>
+        </member>
+        <member name="M:Chandler.Data.ServerMeta.#ctor">
+            <summary>
+            ServerMeta ctor
+            </summary>
+        </member>
+        <member name="T:Chandler.ServerConfig">
+            <summary>
+            Server Configuration Object
+            </summary>
+        </member>
+        <member name="P:Chandler.ServerConfig.Provider">
+            <summary>
+            Database Provider
+            </summary>
+        </member>
+        <member name="P:Chandler.ServerConfig.ConnectionString">
+            <summary>
+            Connection string for the database
+            </summary>
+        </member>
+        <member name="P:Chandler.ServerConfig.Server">
+            <summary>
+            The base server address this application is running on
+            </summary>
+        </member>
+        <member name="P:Chandler.ServerConfig.SiteName">
+            <summary>
+            Name for the entire site
+            </summary>
+        </member>
+        <member name="P:Chandler.ServerConfig.SiteLogo">
+            <summary>
+            The logo for the site
+            </summary>
+        </member>
+        <member name="P:Chandler.ServerConfig.DefaultPassword">
+            <summary>
+            The default master password for deleting threads
+            </summary>
+        </member>
+        <member name="T:Chandler.Models.BoardPageModel">
+            <summary>
+            Board Page Model
+            </summary>
+        </member>
+        <member name="P:Chandler.Models.BoardPageModel.BoardInfo">
+            <summary>
+            Info for the board
+            </summary>
+        </member>
+        <member name="P:Chandler.Models.BoardPageModel.Threads">
+            <summary>
+            Threads belonging to the board
+            </summary>
+        </member>
+        <member name="T:Chandler.Models.DeletePageModel">
+            <summary>
+            Delete Page Model
+            </summary>
+        </member>
+        <member name="P:Chandler.Models.DeletePageModel.PostId">
+            <summary>
+            Id of the post to delte
+            </summary>
+        </member>
+        <member name="P:Chandler.Models.DeletePageModel.Password">
+            <summary>
+            Password for the post
+            </summary>
+        </member>
+        <member name="P:Chandler.Models.DeletePageModel.BoardTag">
+            <summary>
+            Board this post belongs to
+            </summary>
+        </member>
+        <member name="T:Chandler.Models.IndexPageModel">
+            <summary>
+            Index Page Model
+            </summary>
+        </member>
+        <member name="P:Chandler.Models.IndexPageModel.Boards">
+            <summary>
+            List of avaliable board
+            </summary>
+        </member>
+        <member name="P:Chandler.Models.IndexPageModel.Config">
+            <summary>
+            Configuration for the server
+            </summary>
+        </member>
+        <member name="T:Chandler.Models.NewPostPageModel">
+            <summary>
+            New Post Page Model
+            </summary>
+        </member>
+        <member name="P:Chandler.Models.NewPostPageModel.BoardTag">
+            <summary>
+            Board to post to
+            </summary>
+        </member>
+        <member name="P:Chandler.Models.NewPostPageModel.ParentId">
+            <summary>
+            Id of the thread this post belongs to
+            </summary>
+        </member>
+        <member name="P:Chandler.Models.NewPostPageModel.ReplyToId">
+            <summary>
+            Id of the post this post is replying to
+            </summary>
+        </member>
+        <member name="P:Chandler.Models.NewPostPageModel.IsCommentReply">
+            <summary>
+            Is the post a reply?
+            </summary>
+        </member>
+        <member name="T:Chandler.Passworder">
+            <summary>
+            Static class for hashing passwords
+            </summary>
+        </member>
+        <member name="M:Chandler.Passworder.GenerateHash(System.String,System.String,System.Int32)">
+            <summary>
+            Generate a hash
+            </summary>
+            <param name="input">Text Input</param>
+            <param name="salt">Hash Salt</param>
+            <param name="cycles">Number of cycles to go through</param>
+            <returns>Generated Hash</returns>
+        </member>
+        <member name="M:Chandler.Passworder.HashAndCompare(System.String,System.String,System.Int32,System.String)">
+            <summary>
+            Compares text input to the given hash
+            </summary>
+            <param name="input">Text Input</param>
+            <param name="salt">Hash Salt</param>
+            <param name="cycles">Hash Cycles</param>
+            <param name="hash">Hash to compare to</param>
+            <returns>True, if text matches hash</returns>
+        </member>
+        <member name="M:Chandler.Passworder.GenerateSalt">
+            <summary>
+            Generate a salt for hashing
+            </summary>
+            <returns>Salt</returns>
+        </member>
+        <member name="T:Chandler.Program">
+            <summary>
+            Program
+            </summary>
+        </member>
+        <member name="M:Chandler.Program.Main(System.String[])">
+            <summary>
+            Main
+            </summary>
+            <param name="args"></param>
+        </member>
+        <member name="M:Chandler.Program.CreateWebHostBuilder(System.String[])">
+            <summary>
+            CreateWebHostBuilder
+            </summary>
+            <param name="args"></param>
+            <returns></returns>
         </member>
     </members>
 </doc>

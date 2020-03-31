@@ -3,22 +3,50 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Chandler.Data
 {
+    /// <summary>
+    /// Database Context Object
+    /// </summary>
     public class DatabaseContext : DbContext
     {
-        public virtual DbSet<Board> Boards { get; set; }
-        public virtual DbSet<Thread> Threads { get; set; }
-        public virtual DbSet<Password> Passwords { get; set; }
-        public virtual DbSet<WebhookSubscription> WebhookSubscritptions { get; set; }
+        /// <summary>
+        /// List of boards
+        /// </summary>
+        public DbSet<Board> Boards { get; set; }
+
+        /// <summary>
+        /// List of threads
+        /// </summary>
+        public DbSet<Thread> Threads { get; set; }
+
+        /// <summary>
+        /// List of passwords
+        /// </summary>
+        public DbSet<Password> Passwords { get; set; }
+
+        /// <summary>
+        /// List of webhook subscriptions
+        /// </summary>
+        public DbSet<WebhookSubscription> WebhookSubscritptions { get; set; }
 
         private string ConnectionString { get; }
-        public DatabaseProvider Provider { get; }
 
+        private DatabaseProvider Provider { get; }
+
+        /// <summary>
+        /// DatabaseContext Ctor
+        /// </summary>
+        /// <param name="provider">Database Provider</param>
+        /// <param name="cstring">Database Connection String</param>
         public DatabaseContext(DatabaseProvider provider, string cstring)
         {
             this.Provider = provider;
             this.ConnectionString = cstring;
         }
 
+        /// <summary>
+        /// Overridden version of OnConfiguring
+        /// </summary>
+        /// <param name="optionsBuilder">DbContextOptionsBuilder</param>
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (optionsBuilder.IsConfigured) return;
@@ -40,12 +68,5 @@ namespace Chandler.Data
                     break;
             }
         }
-    }
-
-    public enum DatabaseProvider : int
-    {
-        PostgreSql = 0,
-        Sqlite = 1,
-        InMemory = 2
     }
 }

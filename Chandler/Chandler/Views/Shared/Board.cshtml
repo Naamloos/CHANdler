@@ -52,7 +52,7 @@
                     }
                 </div>
 
-                @foreach (var comment in Model.Threads.Where(x => x.ParentId == mainthread.Id))
+                @foreach (var comment in mainthread.ChildThreads)
                 {
                     <div class="comment">
                         <p><b>@comment.Username</b> ID: @comment.Id</p>
@@ -65,9 +65,9 @@
                                     newtext = temptxt.Replace("##ID##", comment.ReplyToId.ToString());
                                 }
 
-                                if (ytreg.IsMatch(mainthread.Text))
+                                if (ytreg.IsMatch(comment.Text))
                                 {
-                                    var matchid = ytidreg.Match(comment.Text).Captures.FirstOrDefault().Value.Replace("be/", "").Replace("v=", "");
+                                    var matchid = ytidreg.Match(comment.Text).Captures.FirstOrDefault()?.Value.Replace("be/", "").Replace("v=", "");
                                     <iframe name="comment:@comment.Id" style="max-width: 80%; width: 320px;" src="http://www.youtube.com/embed/@matchid" frameborder="0" allowfullscreen></iframe>
                                 }
 

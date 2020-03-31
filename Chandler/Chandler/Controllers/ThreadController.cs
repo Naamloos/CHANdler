@@ -62,37 +62,56 @@ namespace Chandler.Controllers
         /// Returns a list of threads for a given board
         /// </summary>
         /// <param name="tag">The board tag</param>
+        /// <param name="includechildren">Whether or not to include the children to a thread</param>
         /// <returns>IEnunmerable of Thread or empty</returns>
         /// <response code="200">If the board was found successfully</response>
         [HttpGet, ProducesResponseType(200)]
-        public ActionResult<IEnumerable<Thread>> GetThreads([FromQuery]string tag)
+        public ActionResult<IEnumerable<Thread>> GetThreads([FromQuery]string tag, [FromQuery]bool includechildren = false)
         {
-            if (ctx.Threads.Any(x => x.BoardTag == tag && x.ParentId == -1))
+            var boardthreads = ctx.Threads.Where(x => x.BoardTag == tag && x.ParentId == -1);
+            if (boardthreads.Count() > 0)
             {
-                return ctx.Threads.Where(x => x.BoardTag == tag && x.ParentId == -1)
-                    .OrderByDescending(x => ctx.Threads.Where(y => y.ParentId == x.Id || y.Id == x.Id).Select(y => y.Id).Max())
-                    .ToList();
+                if (!includechildren) return boardthreads.OrderBy(x => x.Id).ToList();
+                else
+                {
+                    var childedthreads = boardthreads.OrderBy(x => x.Id).ToList();
+                    childedthreads.ForEach(x => x.ChildThreads = boardthreads.Where(a => a.ParentId == x.Id));
+                    return childedthreads;
+                }
             }
-            else return this.NotFound("not found");
+            else return this.NotFound("Board not found");
         }
 
         /// <summary>
         /// Gets a thread by its ID
         /// </summary>
         /// <param name="id">The ID of the thread</param>
+        /// <param name="includechildren">Whether or not to include the children to a thread</param>
         /// <returns>Thread or empty</returns>
         /// <response code="200">If the thread was found</response>
         [HttpGet("single"), ProducesResponseType(200)]
-        public ActionResult<Thread> GetSingleThread([FromQuery]int id) =>
-            this.database.GetContext().Threads.FirstOrDefault(x => x.Id == id);
+        public ActionResult<Thread> GetSingleThread([FromQuery]int id, [FromQuery]bool includechildren = false)
+        {
+            var thread = ctx.Threads.FirstOrDefault(x => x.Id == id);
+            if (thread != null)
+            {
+                if (!includechildren) return thread;
+                else
+                {
+                    thread.ChildThreads = ctx.Threads.Where(x => x.ParentId == thread.Id);
+                    return thread;
+                }
+            }
+            else return NotFound("No thread witht the given ID was found");
+        }
 
         /// <summary>
-        /// Gets posts on a given thread
+        /// Gets child posts on a given thread
         /// </summary>
         /// <param name="id"></param>
         /// <returns>List of children threads (IEnumerable of Thread)</returns>
         /// <response code="200">If the thread was found</response>
-        [HttpGet("posts"), ProducesResponseType(200)]
+        [HttpGet("children"), ProducesResponseType(200)]
         public ActionResult<IEnumerable<Thread>> GetPosts([FromQuery]int id)
         {
             if (id < 1) return BadRequest("ID must be valid");
@@ -121,7 +140,7 @@ namespace Chandler.Controllers
 
             var passw = newpost.GeneratePassword;
             int passid = -1;
-            if (!string.IsNullOrEmpty(passw))
+            if (!string.IsNullOrWhiteSpace(passw))
             {
                 var salt = Passworder.GenerateSalt();
                 var (hash, cycles) = Passworder.GenerateHash(passw, salt);
@@ -183,16 +202,13 @@ namespace Chandler.Controllers
         [HttpDelete("delete"), ProducesResponseType(200)]
         public ActionResult<bool> DeletePost([FromQuery]int postid = -1, [FromQuery]string pass = "")
         {
-            if (ctx.Threads.Any(x => x.Id == postid))
+            var thread = ctx.Threads.FirstOrDefault(x => x.Id == postid);
+            if (thread != null)
             {
-                var thread = ctx.Threads.First(x => x.Id == postid);
-                var psasdsa = ctx.Passwords.ToArray();
-                if (ctx.Passwords.Any(x => x.Id == thread.PasswordId))
+                var passwd = ctx.Passwords.FirstOrDefault(x => x.Id == thread.PasswordId);
+                if (passwd != null)
                 {
-                    var passwd = ctx.Passwords.First(x => x.Id == thread.PasswordId);
-
-
-                    bool passcorrect = Passworder.CompareHash(pass, passwd.Salt, passwd.Hash, passwd.Cycles);
+                    var passcorrect = Passworder.HashAndCompare(pass, passwd.Salt, passwd.Cycles, passwd.Hash);
                     if (passcorrect)
                     {
                         ctx.Threads.Remove(thread);
@@ -203,7 +219,7 @@ namespace Chandler.Controllers
 
                 // failed, trying with master password
                 var mpasswd = ctx.Passwords.First(x => x.Id == -1);
-                bool mpasscorrect = Passworder.CompareHash(pass, mpasswd.Salt, mpasswd.Hash, mpasswd.Cycles);
+                var mpasscorrect = Passworder.HashAndCompare(pass, mpasswd.Salt, mpasswd.Cycles, mpasswd.Hash);
 
                 if (mpasscorrect)
                 {
@@ -214,7 +230,7 @@ namespace Chandler.Controllers
 
                 return BadRequest($"Received wrong password: {pass}");
             }
-            else return NotFound();
+            else return NotFound($"Thread with the ID '{postid}' was not found");
         }
     }
 }

@@ -43,7 +43,7 @@ namespace Chandler.Controllers
             if (ctx.WebhookSubscritptions.FirstOrDefault(x => x.Url == url) != null) return this.BadRequest("The given url has already been added");
             #endregion
 
-            var salt = string.Join("", url.Take(new Random().Next(0, url.Length)));
+            var salt = Passworder.GenerateSalt();
             var hash = Passworder.GenerateHash(password, salt);
             var pw = new Password()
             {
@@ -80,17 +80,17 @@ namespace Chandler.Controllers
         [HttpDelete("unsubscribe")]
         public ActionResult<bool> UnSubscribeWebhook([FromQuery]int passwordid, [FromQuery]string password, [FromQuery]ulong id)
         {
-            if (id < 1) return this.BadRequest("The webhook Id is required");
+            if (id < 1) return this.BadRequest("The webhook ID is required");
             
             using var ctx = this.Database.GetContext();
             var pw = ctx.Passwords.FirstOrDefault(x => x.Id == passwordid);
-            var validpass = Passworder.CompareHash(password, pw.Salt, pw.Hash, pw.Cycles);
+            var validpass = Passworder.HashAndCompare(password, pw.Salt, pw.Cycles, pw.Hash);
             var wh = ctx.WebhookSubscritptions.FirstOrDefault(x => x.UrlId == id);
 
             if (wh == null && id != 0 && !validpass)
             {
                 var mpasswd = ctx.Passwords.First(x => x.Id == -1);
-                var passedcheck = Passworder.CompareHash(password, mpasswd.Salt, mpasswd.Hash, mpasswd.Cycles);
+                var passedcheck = Passworder.HashAndCompare(password, mpasswd.Salt, mpasswd.Cycles, mpasswd.Hash);
                 if (passedcheck) wh = ctx.WebhookSubscritptions.FirstOrDefault(x => x.UrlId == id);
                 ctx.WebhookSubscritptions.Remove(wh);
                 ctx.SaveChanges();
@@ -104,7 +104,7 @@ namespace Chandler.Controllers
                 return true;
             }
 
-            return this.BadRequest("No webhook with the given Id or password could be found");
+            return this.BadRequest("No webhook with the given ID or password could be found");
         }
     }
 }
