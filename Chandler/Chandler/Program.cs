@@ -1,5 +1,8 @@
-﻿using Microsoft.AspNetCore;
+﻿using AspNetCoreRateLimit;
+using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.DependencyInjection;
+using System.Threading.Tasks;
 
 namespace Chandler
 {
@@ -12,9 +15,15 @@ namespace Chandler
         /// Main
         /// </summary>
         /// <param name="args"></param>
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
-            CreateWebHostBuilder(args).Build().Run();
+            var webhost = CreateWebHostBuilder(args).Build();
+
+            using var scope = webhost.Services.CreateScope();
+            var ipPolicyStore = scope.ServiceProvider.GetRequiredService<IIpPolicyStore>();
+            await ipPolicyStore.SeedAsync();
+
+            await webhost.RunAsync();
         }
 
         /// <summary>

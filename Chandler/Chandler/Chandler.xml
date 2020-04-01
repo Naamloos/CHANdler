@@ -203,11 +203,12 @@
             Webhook controller
             </summary>
         </member>
-        <member name="M:Chandler.Controllers.WebhooksController.#ctor(Chandler.Data.Database)">
+        <member name="M:Chandler.Controllers.WebhooksController.#ctor(Chandler.Data.Database,Chandler.ServerConfig)">
             <summary>
             Webhook Ctor
             </summary>
             <param name="db"></param>
+            <param name="config"></param>
         </member>
         <member name="M:Chandler.Controllers.WebhooksController.SubscribeWebhook(System.String,System.String,System.String,System.Nullable{System.Int32})">
             <summary>
@@ -403,11 +404,6 @@
         <member name="P:Chandler.Data.Entities.Password.Salt">
             <summary>
             Password Salt
-            </summary>
-        </member>
-        <member name="P:Chandler.Data.Entities.Password.Cycles">
-            <summary>
-            Password Cycles
             </summary>
         </member>
         <member name="T:Chandler.Data.Entities.ServerHealth">
@@ -685,30 +681,23 @@
             Static class for hashing passwords
             </summary>
         </member>
-        <member name="M:Chandler.Passworder.GenerateHash(System.String,System.String,System.Int32)">
+        <member name="M:Chandler.Passworder.GenerateHash(System.String,System.String)">
             <summary>
             Generate a hash
             </summary>
             <param name="input">Text Input</param>
-            <param name="salt">Hash Salt</param>
-            <param name="cycles">Number of cycles to go through</param>
+            <param name="pepper">Unique string known only to the server</param>
             <returns>Generated Hash</returns>
         </member>
-        <member name="M:Chandler.Passworder.HashAndCompare(System.String,System.String,System.Int32,System.String)">
+        <member name="M:Chandler.Passworder.VerifyPassword(System.String,System.String,System.String,System.String)">
             <summary>
             Compares text input to the given hash
             </summary>
             <param name="input">Text Input</param>
             <param name="salt">Hash Salt</param>
-            <param name="cycles">Hash Cycles</param>
+            <param name="pepper">Unique string known only to the server</param>
             <param name="hash">Hash to compare to</param>
             <returns>True, if text matches hash</returns>
-        </member>
-        <member name="M:Chandler.Passworder.GenerateSalt">
-            <summary>
-            Generate a salt for hashing
-            </summary>
-            <returns>Salt</returns>
         </member>
         <member name="T:Chandler.Program">
             <summary>

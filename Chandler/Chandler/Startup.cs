@@ -15,6 +15,7 @@ using Swashbuckle.AspNetCore.Swagger;
 using Microsoft.OpenApi.Models;
 using System;
 using System.Reflection;
+using Chandler.Data.Entities;
 
 namespace Chandler
 {
@@ -41,10 +42,13 @@ namespace Chandler
             //Taken from https://github.com/stefanprodan/AspNetCoreRateLimit/wiki/IpRateLimitMiddleware#setup
             services.AddOptions();
             services.AddMemoryCache();
+
             services.Configure<IpRateLimitOptions>(Configuration.GetSection("IpRateLimiting"));
             services.Configure<IpRateLimitPolicies>(Configuration.GetSection("IpRateLimitPolicies"));
+
             services.AddSingleton<IIpPolicyStore, MemoryCacheIpPolicyStore>();
             services.AddSingleton<IRateLimitCounterStore, MemoryCacheRateLimitCounterStore>();
+
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
             #endregion
@@ -106,15 +110,13 @@ namespace Chandler
                     Description = "haha cool and good dank memes",
                 });
 
-                var salt = Passworder.GenerateSalt();
-                var (hash, cycles) = Passworder.GenerateHash(this._config.DefaultPassword, salt);
+                var hash = Passworder.GenerateHash(this._config.DefaultPassword, this._config.DefaultPassword);
 
-                ctx.Passwords.Add(new Data.Entities.Password()
+                ctx.Passwords.Add(new Password()
                 {
                     Id = -1,
-                    Salt = salt,
-                    Cycles = cycles,
-                    Hash = hash
+                    Salt = hash.Salt,
+                    Hash = hash.Hash
                 });
 
                 ctx.SaveChanges();
@@ -128,7 +130,6 @@ namespace Chandler
             if (env.EnvironmentName == "Development") app.UseDeveloperExceptionPage();
 
             app.UseSwagger();
-
             app.UseSwaggerUI(x =>
             {
                 x.SwaggerEndpoint("/swagger/v1/swagger.json", "API v1");

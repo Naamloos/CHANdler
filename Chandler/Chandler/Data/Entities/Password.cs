@@ -27,11 +27,5 @@ namespace Chandler.Data.Entities
         /// </summary>
         [Column("salt")]
         public string Salt { get; set; }
-
-        /// <summary>
-        /// Password Cycles
-        /// </summary>
-        [Column("cycles")]
-        public int Cycles { get; set; }
     }
 }

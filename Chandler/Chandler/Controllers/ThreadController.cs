@@ -1,16 +1,14 @@
-﻿using System.Collections.Generic;
+﻿using Chandler.Data;
+using Chandler.Data.Entities;
+using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Unicode;
 using System.Threading.Tasks;
-using Chandler.Data;
-using Chandler.Data.Entities;
-using Chandler.Models;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.DependencyModel.Resolution;
-using Newtonsoft.Json;
 
 namespace Chandler.Controllers
 {
@@ -79,7 +77,7 @@ namespace Chandler.Controllers
                     return childedthreads;
                 }
             }
-            else return this.NotFound("Board not found");
+            else return this.NotFound("Board not found or the board has no threads");
         }
 
         /// <summary>
@@ -102,7 +100,7 @@ namespace Chandler.Controllers
                     return thread;
                 }
             }
-            else return NotFound("No thread witht the given ID was found");
+            else return NotFound("No thread with the given ID was found");
         }
 
         /// <summary>
@@ -142,13 +140,11 @@ namespace Chandler.Controllers
             int passid = -1;
             if (!string.IsNullOrWhiteSpace(passw))
             {
-                var salt = Passworder.GenerateSalt();
-                var (hash, cycles) = Passworder.GenerateHash(passw, salt);
+                var hash = Passworder.GenerateHash(passw, this.config.DefaultPassword);
                 var newpass = new Password()
                 {
-                    Salt = salt,
-                    Hash = hash,
-                    Cycles = cycles
+                    Hash = hash.Hash,
+                    Salt = hash.Salt
                 };
                 ctx.Passwords.Add(newpass);
                 ctx.SaveChanges();
@@ -161,7 +157,7 @@ namespace Chandler.Controllers
             var encoder = HtmlEncoder.Create(settings);
 
             newpost.Text = encoder.Encode(newpost.Text);
-            if(newpost.Image != null) newpost.Image = encoder.Encode(newpost.Image);
+            if (newpost.Image != null) newpost.Image = encoder.Encode(newpost.Image);
             newpost.Username = encoder.Encode(newpost.Username);
             if (newpost.Topic != null) newpost.Topic = encoder.Encode(newpost.Topic);
 
@@ -208,7 +204,7 @@ namespace Chandler.Controllers
                 var passwd = ctx.Passwords.FirstOrDefault(x => x.Id == thread.PasswordId);
                 if (passwd != null)
                 {
-                    var passcorrect = Passworder.HashAndCompare(pass, passwd.Salt, passwd.Cycles, passwd.Hash);
+                    var passcorrect = Passworder.VerifyPassword(pass, passwd.Hash, passwd.Salt, this.config.DefaultPassword);
                     if (passcorrect)
                     {
                         ctx.Threads.Remove(thread);
@@ -219,7 +215,7 @@ namespace Chandler.Controllers
 
                 // failed, trying with master password
                 var mpasswd = ctx.Passwords.First(x => x.Id == -1);
-                var mpasscorrect = Passworder.HashAndCompare(pass, mpasswd.Salt, mpasswd.Cycles, mpasswd.Hash);
+                var mpasscorrect = Passworder.VerifyPassword(pass, mpasswd.Hash, mpasswd.Salt, this.config.DefaultPassword);
 
                 if (mpasscorrect)
                 {

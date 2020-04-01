@@ -14,13 +14,19 @@ namespace Chandler.Controllers
     [Route("api/[controller]"), Produces("application/json")]
     public class WebhooksController : Controller
     {
+        ServerConfig Config { get; set; }
         Database Database { get; set; }
 
         /// <summary>
         /// Webhook Ctor
         /// </summary>
         /// <param name="db"></param>
-        public WebhooksController(Database db) => this.Database = db;
+        /// <param name="config"></param>
+        public WebhooksController(Database db, ServerConfig config)
+        {
+            this.Config = config;
+            this.Database = db;
+        }
 
         /// <summary>
         /// Subscribes a webhook to the given thread or board
@@ -43,13 +49,11 @@ namespace Chandler.Controllers
             if (ctx.WebhookSubscritptions.FirstOrDefault(x => x.Url == url) != null) return this.BadRequest("The given url has already been added");
             #endregion
 
-            var salt = Passworder.GenerateSalt();
-            var hash = Passworder.GenerateHash(password, salt);
+            var hash = Passworder.GenerateHash(password, this.Config.DefaultPassword);
             var pw = new Password()
             {
-                Cycles = hash.cycles,
-                Hash = hash.hash,
-                Salt = salt
+                Hash = hash.Hash,
+                Salt = hash.Salt
             };
 
             this.Database.GetContext().Passwords.Add(pw);
@@ -84,13 +88,13 @@ namespace Chandler.Controllers
             
             using var ctx = this.Database.GetContext();
             var pw = ctx.Passwords.FirstOrDefault(x => x.Id == passwordid);
-            var validpass = Passworder.HashAndCompare(password, pw.Salt, pw.Cycles, pw.Hash);
+            var validpass = Passworder.VerifyPassword(password, pw.Hash, pw.Salt, this.Config.DefaultPassword);
             var wh = ctx.WebhookSubscritptions.FirstOrDefault(x => x.UrlId == id);
 
             if (wh == null && id != 0 && !validpass)
             {
                 var mpasswd = ctx.Passwords.First(x => x.Id == -1);
-                var passedcheck = Passworder.HashAndCompare(password, mpasswd.Salt, mpasswd.Cycles, mpasswd.Hash);
+                var passedcheck = Passworder.VerifyPassword(password, mpasswd.Hash, mpasswd.Salt, this.Config.DefaultPassword);
                 if (passedcheck) wh = ctx.WebhookSubscritptions.FirstOrDefault(x => x.UrlId == id);
                 ctx.WebhookSubscritptions.Remove(wh);
                 ctx.SaveChanges();
