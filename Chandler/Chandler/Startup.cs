@@ -16,6 +16,7 @@ using Microsoft.OpenApi.Models;
 using System;
 using System.Reflection;
 using Chandler.Data.Entities;
+using Microsoft.Extensions.FileProviders;
 
 namespace Chandler
 {
@@ -24,11 +25,32 @@ namespace Chandler
         private readonly ServerConfig _config;
         private readonly Database _db;
         private readonly ServerMeta _meta;
+        private string currentdir;
 
         public Startup(IConfiguration configuration)
         {
+
             Configuration = configuration;
-            _config = JsonConvert.DeserializeObject<ServerConfig>(File.ReadAllText($"{Directory.GetCurrentDirectory()}/Data/Configs/ServerConfig.json"));
+
+            currentdir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            Directory.SetCurrentDirectory(currentdir);
+            // Ensure directories exist
+           if (!Directory.Exists(Path.Combine(currentdir, "res")))
+                Directory.CreateDirectory(Path.Combine(currentdir, "res"));
+
+            if (!Directory.Exists(Path.Combine(currentdir, "config")))
+                Directory.CreateDirectory(Path.Combine(currentdir, "config"));
+
+            if (!File.Exists(Path.Combine(currentdir, "config/config.json"))) 
+            {
+                File.Create(Path.Combine(currentdir, "config/config.json")).Close();
+                File.WriteAllText(Path.Combine(currentdir, "config/config.json"), 
+                    JsonConvert.SerializeObject(new ServerConfig()));
+            }
+
+            _config = JsonConvert.DeserializeObject<ServerConfig>(
+                File.ReadAllText(Path.Combine(currentdir, "config/config.json")));
+            
             _db = new Database(_config.Provider, _config.ConnectionString);
             _meta = new ServerMeta();
         }
@@ -70,7 +92,9 @@ namespace Chandler
                 x.IncludeXmlComments($"{AppContext.BaseDirectory}/{Assembly.GetExecutingAssembly().GetName().Name}.xml");
             });
 
-            services.AddMvc(x => x.EnableEndpointRouting = false).SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
+            services.AddMvc(x => x.EnableEndpointRouting = false)
+                .SetCompatibilityVersion(CompatibilityVersion.Version_3_0)
+                .AddControllersAsServices();
             services.AddSingleton(_db);
             services.AddSingleton(_meta);
             services.AddSingleton(_config);
@@ -92,7 +116,7 @@ namespace Chandler
                     Name = "CHANdler",
                     Tag = "c",
                     Description = "CHANdler test board",
-                    ImageUrl = "https://i.kym-cdn.com/photos/images/newsfeed/000/779/388/d33.jpg"
+                    ImageUrl = "/res/logo.jpg"
                 });
 
                 ctx.Boards.Add(new Data.Entities.Board()
@@ -106,7 +130,7 @@ namespace Chandler
                 {
                     Name = "Memes",
                     Tag = "m",
-                    ImageUrl = "https://img.thedailybeast.com/image/upload/c_crop,d_placeholder_euli9k,h_1440,w_2560,x_0,y_0/dpr_1.5/c_limit,w_1044/fl_lossy,q_auto/v1531451526/180712-Weill--The-Creator-of-Pepe-hero_uionjj",
+                    ImageUrl = "/res/pepo.gif",
                     Description = "haha cool and good dank memes",
                 });
 
@@ -139,6 +163,13 @@ namespace Chandler
             app.UseCors("publicpolicy");
             app.UseIpRateLimiting();
             app.UseStaticFiles();
+
+            app.UseFileServer(new FileServerOptions() 
+            { 
+                FileProvider = new PhysicalFileProvider(Path.Combine(currentdir, "res")),
+                RequestPath = "/res"
+            });
+
             app.UseHttpsRedirection();
             app.UseMvc(routes =>
             {

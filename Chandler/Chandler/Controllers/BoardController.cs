@@ -13,18 +13,12 @@ namespace Chandler.Controllers
     public class BoardController : ControllerBase
     {
         private readonly Database database;
-        private readonly ServerMeta meta;
         
         /// <summary>
         /// Board ctor
         /// </summary>
         /// <param name="database"></param>
-        /// <param name="meta"></param>
-        public BoardController(Database database, ServerMeta meta)
-        {
-            this.database = database;
-            this.meta = meta;
-        }
+        public BoardController(Database database) => this.database = database;
 
         /// <summary>
         /// Returns a list of boards

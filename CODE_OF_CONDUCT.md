@@ -8,4 +8,4 @@ Treat others like you would like others to treat yourself. We reckon this partic
 Criticisms, arguments, debates, and other forms of discussion are welcome, so long as they end up contributing to something. If you're going to complain just for the sake of complaining, you're not being constructive, and are just wasting everyone's time. Do you disagree with something? Is it a policy? The way something is done?  An unsatisfactory resolution to a matter? Speak up, but make sure you do so constructively. At minimum, state your reasoning. If possible, provide alternatives.
 
 # Attribution
-This Code of Conduct is adapted from Clyde.NET, available at https://github.com/Clyde-NET/Clyde.NET
+This Code of Conduct is adapted from Clyde.NET, available at https://git.emzi0767.com/Clyde-NET/Clyde.NET

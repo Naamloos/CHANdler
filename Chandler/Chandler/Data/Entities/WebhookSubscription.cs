@@ -17,10 +17,16 @@ namespace Chandler.Data.Entities
         public int Id { get; set; }
 
         /// <summary>
-        /// The url for the webhook
+        /// The token for the webhook
         /// </summary>
-        [Column("url")]
-        public string Url { get; set; }
+        [Column("token")]
+        public string Token { get; set; }
+
+        /// <summary>
+        /// id for the webhook
+        /// </summary>
+        [Column("webhookid")]
+        public ulong WebhookId { get; set; }
 
         /// <summary>
         /// The board tag to listen to
@@ -33,17 +39,5 @@ namespace Chandler.Data.Entities
         /// </summary>
         [Column("threadid")]
         public int? ThreadId { get; set; }
-
-        /// <summary>
-        /// The password ID
-        /// </summary>
-        [Column("passwordid")]
-        public int PasswordId { get; set; }
-
-        /// <summary>
-        /// ID of the webhook
-        /// </summary>
-        [Column("webhookUrlId")]
-        public ulong UrlId { get; set; }
     }
 }

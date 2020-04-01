@@ -21,19 +21,25 @@ namespace Chandler.Controllers
         private readonly Database database;
         private readonly ServerConfig config;
         private readonly DatabaseContext ctx;
+        private readonly ThreadController threadcontroller;
+        private readonly WebhooksController webhookscontroller;
 
         /// <summary>
         /// Page Ctor
         /// </summary>
         /// <param name="db">Database Model</param>
         /// <param name="config">Server Configuration</param>
-        public PageController(Database db, ServerConfig config)
+        /// <param name="threadcontroller">API Thread Controller</param>
+        /// <param name="webhookscontroller">API Webhook Controller</param>
+        public PageController(Database db, ServerConfig config, ThreadController threadcontroller, WebhooksController webhookscontroller)
         {
             this.database = db;
             this.config = config;
             this.http = new HttpClient();
             this.ctx = this.database.GetContext();
             this.ctx.Database.EnsureCreated();
+            this.threadcontroller = threadcontroller;
+            this.webhookscontroller = webhookscontroller;
         }
 
         /// <summary>
@@ -116,7 +122,7 @@ namespace Chandler.Controllers
         [Route("thread/create"), HttpGet]
         public async Task<IActionResult> CreatePostAndRedirect([FromQuery]string boardtag, [FromQuery]string text, [FromQuery]int parent_id = -1, [FromQuery]string username = null, [FromQuery]string topic = null, [FromQuery]string password = null, [FromQuery]string imageurl = null, [FromQuery]long replytoid = -1)
         {
-            var res = await http.PostAsync(new Uri($"{this.config.Server}/api/thread/create"), new StringContent(JsonConvert.SerializeObject(new Thread()
+            var response = await threadcontroller.CreatePost(new Thread()
             {
                 BoardTag = boardtag,
                 GeneratePassword = password,
@@ -126,9 +132,9 @@ namespace Chandler.Controllers
                 Image = imageurl,
                 ReplyToId = replytoid,
                 Topic = topic
-            }), Encoding.UTF8, "application/json"));
+            });
 
-            return Redirect($"{this.config.Server}/board/{boardtag}");
+            return LocalRedirect($"/board/{boardtag}");
         }
 
         /// <summary>
@@ -139,38 +145,36 @@ namespace Chandler.Controllers
         /// <param name="board_tag">Board tag</param>
         /// <returns>Board page</returns>
         [Route("thread/deletepost"), HttpGet]
-        public async Task<IActionResult> DeletePostFromQuery([FromQuery]int postid, [FromQuery]string password, [FromQuery]string board_tag)
+        public IActionResult DeletePostFromQuery([FromQuery]int postid, [FromQuery]string password, [FromQuery]string board_tag)
         {
-            var res = await http.DeleteAsync(new Uri($"{this.config.Server}/api/thread/delete?postid={postid}&pass={password}"));
-            return this.Redirect($"{this.config.Server}/board/{board_tag}");
+            var res = threadcontroller.DeletePost(postid, password);
+            return this.LocalRedirect($"/board/{board_tag}");
         }
 
         /// <summary>
         /// Creates a new webhook link and returns to the base server address
         /// </summary>
         /// <param name="url">Webhook URL</param>
-        /// <param name="password">Password to delete the webhook</param>
         /// <param name="boardtag">Board tag to listen to </param>
         /// <param name="threadid">Thread Id to listen to</param>
         /// <returns>Main Index Page</returns>
         [Route("formsub"), HttpGet]
-        public async Task<IActionResult> FormSub([FromQuery]string url, [FromQuery]string password, [FromQuery]string boardtag = null, [FromQuery]int? threadid = null)
+        public IActionResult FormSub([FromQuery]string url, [FromQuery]string boardtag = null, [FromQuery]int? threadid = null)
         {
-            var res = await http.GetAsync(new Uri($"{this.config.Server}/api/webhooks/subscribe?url={url}&password={password}&boardtag={boardtag}&threadid={threadid}"));
-            return Redirect("/");
+            var res = webhookscontroller.SubscribeWebhook(url, boardtag, threadid);
+            return LocalRedirect("/");
         }
 
         /// <summary>
         /// Deletes a webhook link and returns to the base server address
         /// </summary>
-        /// <param name="password">Password to delete webhook</param>
-        /// <param name="id">Id of the webhook</param>
+        /// <param name="url">URL of the webhook</param>
         /// <returns>Main Index Page</returns>
         [Route("formunsub"), HttpGet]
-        public async Task<IActionResult> FormUnsub([FromQuery]string password, [FromQuery]ulong id)
+        public IActionResult FormUnsub([FromQuery]string url)
         {
-            var res = await http.GetAsync(new Uri($"{this.config.Server}/api/webhooks/unsubscribe?password={password}&id={id}"));
-            return Redirect("/");
+            var res = webhookscontroller.UnSubscribeWebhook(url);
+            return LocalRedirect("/");
         }
     }
 }

@@ -1,8 +1,0 @@
-{
-  "dbprovider": 2,
-  "dbstring": "",
-  "server": "http://localhost:5016",
-  "sitename": "CHANdler",
-  "sitelogo": "https://i.kym-cdn.com/photos/images/newsfeed/000/779/388/d33.jpg",
-  "defaultpass" : "admin"
-}

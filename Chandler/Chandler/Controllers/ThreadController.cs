@@ -50,7 +50,7 @@ namespace Chandler.Controllers
                 if (thread.BoardTag == sub.BoardTag || thread.ParentId == sub.ThreadId)
                 {
                     var jsondata = JsonConvert.SerializeObject(body);
-                    var res = await http.PostAsync(sub.Url, new StringContent(jsondata, Encoding.UTF8, "application/json"));
+                    var res = await http.PostAsync($"https://discordapp.com/api/webhooks/{sub.WebhookId}/{sub.Token}", new StringContent(jsondata, Encoding.UTF8, "application/json"));
                     var cont = await res.Content.ReadAsStringAsync();
                 }
             }
