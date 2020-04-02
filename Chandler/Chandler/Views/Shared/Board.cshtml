@@ -11,19 +11,40 @@
 </div>
 
 <div id="boardthreads">
-    @{
-        var linkreg = new Regex(@"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)");
-        var ytreg = new Regex(@"^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$");
-        var nlreg = new Regex(@"(?:\r\n|\r|\n|&#xD;&#xA;)");
-        var replyidreg = new Regex(@"(?:&gt;&gt;[\d]+)");
-        var ytidreg = new Regex(@"(?:(?:v=[\d\w]+)|(?:be\/[\d\w]+))", RegexOptions.IgnoreCase);
 
+    <div id="pages">
+        @if (this.Model.PageCount > 1)
+        {
+            @for (int i = 0; i < this.Model.PageCount; i++)
+            {
+                if (i + 1 == this.Model.Currentpage)
+                {
+                    @(i + 1)
+                }
+                else
+                {
+                    <a href="/board/@Model.BoardInfo.Tag?p=@(i + 1)">@(i + 1)</a>
+                }
+                @Html.Raw("&nbsp");
+            }
+        }
+    </div>
+
+    @{
         foreach (var mainthread in Model.Threads.Where(x => x.ParentId == 0))
         {
             var a = Model.Threads.ToList();
             <div class="thread">
                 <div class="threadheader">
-                    <p><b>Thread by: @mainthread.Username</b> ID: @mainthread.Id</p>
+                    <p>
+                        <b>Thread by: @mainthread.Username</b>
+                        &nbsp;
+                        @if (!string.IsNullOrEmpty(mainthread.Topic))
+                        {
+                            <b class="threadtitle">@mainthread.Topic</b>
+                        }
+                        (ID: @mainthread.Id)
+                    </p>
                 </div>
                 <div class="threadtext">
                     @{
@@ -31,59 +52,31 @@
                         {
                             <img class="imgsmall" onclick="imgclick(this)" src="@mainthread.Image">
                         }
-                        if (ytreg.IsMatch(mainthread.Text))
-                        {
-                            var matchid = ytidreg.Match(mainthread.Text).Captures.FirstOrDefault().Value.Replace("be/", "").Replace("v=", "");
-                            <iframe style="max-width: 80%; width: 320px;" src="http://www.youtube.com/embed/@matchid" frameborder="0" allowfullscreen></iframe>
-                        }
-                        else if (linkreg.IsMatch(mainthread.Text))
-                        {
-                            <a href="@mainthread.Text" target="_blank">@mainthread.Text</a>
-                        }
-                        else
-                        {
-                            var txt = nlreg.Replace(mainthread.Text, "<br>");
-                            <p>@txt</p>
-                        }
+
+                        <p class="_linkify">@mainthread.Text</p>
                         <p>
                             <i><a href="/new?board=@Model.BoardInfo.Tag&parent_id=@mainthread.Id">Reply</a></i>
                             <i><a href="/delete?id=@mainthread.Id&board_tag=@Model.BoardInfo.Tag">Delete</a></i>
+                            <i><a href="/thread/@mainthread.Id">View Full Thread</a></i>
+                            <br />
+                            @if (this.Model.BigThreads.Contains(mainthread.Id))
+                            {
+                                <b><i>This is a big thread. Only @mainthread.ChildThreads.Count() comments are shown.</i></b>
+                            }
                         </p>
                     }
                 </div>
 
-                @foreach (var comment in mainthread.ChildThreads)
+                @foreach (var comment in mainthread.ChildThreads.OrderBy(x => x.Id))
                 {
                     <div class="comment">
-                        <p><b>@comment.Username</b> ID: @comment.Id</p>
+                        <p><b>@comment.Username</b> (ID: @comment.Id)</p>
                         <div class="commenttext">
-                            @{
-                                var newtext = nlreg.Replace(comment.Text, "<br />");
-                                if (comment.IsCommentReply)
-                                {
-                                    var temptxt = replyidreg.Replace(newtext, "<a href=\"#comment:##ID##\">>>##ID##</a>");
-                                    newtext = temptxt.Replace("##ID##", comment.ReplyToId.ToString());
-                                }
-
-                                if (ytreg.IsMatch(comment.Text))
-                                {
-                                    var matchid = ytidreg.Match(comment.Text).Captures.FirstOrDefault()?.Value.Replace("be/", "").Replace("v=", "");
-                                    <iframe name="comment:@comment.Id" style="max-width: 80%; width: 320px;" src="http://www.youtube.com/embed/@matchid" frameborder="0" allowfullscreen></iframe>
-                                }
-
-                                else if (linkreg.IsMatch(comment.Text))
-                                {
-                                    <a name="comment:@comment.Id" href="@mainthread.Text" target="_blank">@mainthread.Text</a>
-                                }
-                                else
-                                {
-                                    <p name="comment:@comment.Id">@Html.Raw(newtext)</p>
-                                }
-                                <p>
-                                    <i><a href="/new?board=@Model.BoardInfo.Tag&parent_id=@mainthread.Id&replytoid=@comment.Id">Reply</a></i>
-                                    <i><a href="/delete?id=@comment.Id&board_tag=@Model.BoardInfo.Tag">Delete</a></i>
-                                </p>
-                            }
+                            <p name="comment:@comment.Id" class="_linkify">@comment.Text</p>
+                            <p>
+                                <i><a href="/new?board=@Model.BoardInfo.Tag&parent_id=@mainthread.Id&replytoid=@comment.Id">Reply</a></i>
+                                <i><a href="/delete?id=@comment.Id&board_tag=@Model.BoardInfo.Tag">Delete</a></i>
+                            </p>
                         </div>
                     </div>
                 }
@@ -91,4 +84,47 @@
             </div>
         }
     }
+
+
+    <div id="pages">
+        @if (this.Model.PageCount > 1)
+        {
+            @for (int i = 1; i <= this.Model.PageCount; i++)
+            {
+                if (i == this.Model.Currentpage)
+                {
+                    @(i)
+                }
+                else
+                {
+                    <a href="/board/@Model.BoardInfo.Tag?p=@(i)">@(i)</a>
+                }
+                @Html.Raw("&nbsp");
+            }
+        }
+    </div>
+
 </div>
+
+@* This part defines the metadata stuff. *@
+@section metadata
+{
+    @{
+        var meta = new MetadataViewModel()
+        {
+            Title = $"{Model.Config.SiteName} - /{Model.BoardInfo.Tag}/ ({Model.BoardInfo.Name})",
+            Config = Model.Config,
+            Description = Model.BoardInfo.Description,
+            Image = Model.Config.SiteLogo,
+            ImageRelative = true,
+            RelativeUrl = Url.RouteUrl(ViewContext.RouteData.Values)
+        };
+
+        if (!string.IsNullOrEmpty(this.Model.BoardInfo.ImageUrl))
+        {
+            meta.Image = this.Model.BoardInfo.ImageUrl;
+        }
+
+        @Html.Partial("_Metadata", meta)
+    }
+}

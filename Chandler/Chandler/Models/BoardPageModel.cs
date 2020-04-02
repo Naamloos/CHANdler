@@ -17,5 +17,30 @@ namespace Chandler.Models
         /// Threads belonging to the board
         /// </summary>
         public IEnumerable<Thread> Threads { get; set; }
+
+        /// <summary>
+        /// Thread IDs for Threads with more than 5 responses
+        /// </summary>
+        public List<int> BigThreads { get; set; }
+
+        /// <summary>
+        /// Amount of pages available
+        /// </summary>
+        public int PageCount { get; set; }
+
+        /// <summary>
+        /// Current page
+        /// </summary>
+        public int Currentpage { get; set; }
+
+        /// <summary>
+        /// Max threads per board page
+        /// </summary>
+        public int MaxThreadsPerPage { get; set; }
+
+        /// <summary>
+        /// Configuration for the server
+        /// </summary>
+        public ServerConfig Config { get; set; }
     }
 }

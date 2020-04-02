@@ -19,5 +19,10 @@
         /// Board this post belongs to
         /// </summary>
         public string BoardTag { get; set; }
+
+        /// <summary>
+        /// Configuration for the server
+        /// </summary>
+        public ServerConfig Config { get; set; }
     }
 }

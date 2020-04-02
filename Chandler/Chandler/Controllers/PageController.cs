@@ -4,6 +4,7 @@ using Chandler.Models;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
@@ -17,7 +18,6 @@ namespace Chandler.Controllers
     [ApiExplorerSettings(IgnoreApi = true)]
     public class PageController : Controller
     {
-        private readonly HttpClient http;
         private readonly Database database;
         private readonly ServerConfig config;
         private readonly DatabaseContext ctx;
@@ -35,7 +35,6 @@ namespace Chandler.Controllers
         {
             this.database = db;
             this.config = config;
-            this.http = new HttpClient();
             this.ctx = this.database.GetContext();
             this.ctx.Database.EnsureCreated();
             this.threadcontroller = threadcontroller;
@@ -53,20 +52,78 @@ namespace Chandler.Controllers
             Config = this.config
         });
 
+        private const int MAX_THREADS_ON_INDEX = 10;
         /// <summary>
         /// Board page
         /// </summary>
         /// <param name="tag">Board Tag</param>
+        /// <param name="p">Page to load</param>
         /// <returns>Board page for the given board tag</returns>
         [Route("board/{tag}"), HttpGet]
-        public IActionResult Board(string tag)
+        public IActionResult Board(string tag, [FromQuery]int p = 1)
         {
-            var threads = this.ctx.Threads.Where(x => x.BoardTag == tag);
-            threads.ToList().ForEach(x => x.ChildThreads = this.ctx.Threads.Where(a => a.ParentId == x.Id));
+            var threadcount = this.ctx.Threads.Where(x => x.BoardTag == tag && x.ParentId < 1).Count();
+
+            var pagecount = 1;
+            // calculating page count
+            var remainder = threadcount % MAX_THREADS_ON_INDEX;
+            if(threadcount - remainder >= MAX_THREADS_ON_INDEX) // we can only have more than 1 page when we have over 10 threads
+            {
+                pagecount = ((threadcount - remainder) / MAX_THREADS_ON_INDEX);
+                if (remainder > 0)
+                    pagecount++;
+            }
+
+            // Get threads in order of last bumped.
+            var threads = this.ctx.Threads.Where(x => x.BoardTag == tag && x.ParentId < 1)
+                .OrderByDescending(x => this.ctx.Threads.Where(a => a.ParentId == x.Id || a.Id == x.Id).Select(b => b.Id).Max())
+                .Skip(Math.Abs(p - 1) * MAX_THREADS_ON_INDEX)
+                .Take(MAX_THREADS_ON_INDEX)
+                .ToList();
+            
+            threads.ToList().ForEach(x => 
+            {
+                x.ChildThreads = this.ctx.Threads.Where(a => a.ParentId == x.Id).OrderByDescending(a => a.Id).Take(5);
+            });
+
+            List<int> bigOnes = new List<int>();
+            foreach(var t in threads)
+            {
+                if(this.ctx.Threads.Where(a => a.ParentId ==t.Id).Count() > 5)
+                {
+                    bigOnes.Add(t.Id);
+                }
+            }
+
             return this.View(new BoardPageModel()
             {
                 BoardInfo = this.ctx.Boards.FirstOrDefault(x => x.Tag == tag),
-                Threads = threads
+                Threads = threads,
+                BigThreads = bigOnes,
+                PageCount = pagecount,
+                Currentpage = p,
+                MaxThreadsPerPage = MAX_THREADS_ON_INDEX,
+                Config = this.config
+            });
+        }
+
+        /// <summary>
+        /// Thread page
+        /// </summary>
+        /// <param name="id">Thread id</param>
+        /// <returns>Thread page for the given thread id</returns>
+        [Route("thread/{id}"), HttpGet]
+        public IActionResult Thread(int id)
+        {
+            var thread = this.ctx.Threads.First(x => x.Id == id);
+            thread.ChildThreads = this.ctx.Threads.Where(a => a.ParentId == thread.Id).OrderBy(x => x.Id);
+            var board = this.ctx.Boards.First(x => x.Tag == thread.BoardTag);
+
+            return this.View(new ThreadPageModel()
+            {
+                BoardInfo = board,
+                Thread = thread,
+                Config = this.config
             });
         }
 
@@ -83,7 +140,8 @@ namespace Chandler.Controllers
             {
                 BoardTag = board,
                 ParentId = parent_id,
-                ReplyToId = replytoid
+                ReplyToId = replytoid,
+                Config = this.config
             });
 
         /// <summary>
@@ -97,7 +155,8 @@ namespace Chandler.Controllers
             this.View(new DeletePageModel()
             {
                 BoardTag = board_tag,
-                PostId = id
+                PostId = id,
+                Config = this.config
             });
 
         /// <summary>
@@ -105,7 +164,7 @@ namespace Chandler.Controllers
         /// </summary>
         /// <returns>Webhook page</returns>
         [Route("Webhooks"), HttpGet]
-        public IActionResult Webhooks() => this.View();
+        public IActionResult Webhooks() => this.View(new WebhooksPageModel() { Config = this.config });
 
         /// <summary>
         /// Creates a new thread and returns to the board page

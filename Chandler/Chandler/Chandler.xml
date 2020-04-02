@@ -9,12 +9,11 @@
             Board Object
             </summary>
         </member>
-        <member name="M:Chandler.Controllers.BoardController.#ctor(Chandler.Data.Database,Chandler.Data.ServerMeta)">
+        <member name="M:Chandler.Controllers.BoardController.#ctor(Chandler.Data.Database)">
             <summary>
             Board ctor
             </summary>
             <param name="database"></param>
-            <param name="meta"></param>
         </member>
         <member name="M:Chandler.Controllers.BoardController.GetBoardList">
             <summary>
@@ -49,12 +48,20 @@
             </summary>
             <returns>Index Page</returns>
         </member>
-        <member name="M:Chandler.Controllers.PageController.Board(System.String)">
+        <member name="M:Chandler.Controllers.PageController.Board(System.String,System.Int32)">
             <summary>
             Board page
             </summary>
             <param name="tag">Board Tag</param>
+            <param name="p">Page to load</param>
             <returns>Board page for the given board tag</returns>
+        </member>
+        <member name="M:Chandler.Controllers.PageController.Thread(System.Int32)">
+            <summary>
+            Thread page
+            </summary>
+            <param name="id">Thread id</param>
+            <returns>Thread page for the given thread id</returns>
         </member>
         <member name="M:Chandler.Controllers.PageController.New(System.String,System.Int32,System.Int64)">
             <summary>
@@ -595,6 +602,11 @@
             The default master password for deleting threads
             </summary>
         </member>
+        <member name="P:Chandler.ServerConfig.BaseUrl">
+            <summary>
+            Required for some metadata
+            </summary>
+        </member>
         <member name="T:Chandler.Models.BoardPageModel">
             <summary>
             Board Page Model
@@ -608,6 +620,31 @@
         <member name="P:Chandler.Models.BoardPageModel.Threads">
             <summary>
             Threads belonging to the board
+            </summary>
+        </member>
+        <member name="P:Chandler.Models.BoardPageModel.BigThreads">
+            <summary>
+            Thread IDs for Threads with more than 5 responses
+            </summary>
+        </member>
+        <member name="P:Chandler.Models.BoardPageModel.PageCount">
+            <summary>
+            Amount of pages available
+            </summary>
+        </member>
+        <member name="P:Chandler.Models.BoardPageModel.Currentpage">
+            <summary>
+            Current page
+            </summary>
+        </member>
+        <member name="P:Chandler.Models.BoardPageModel.MaxThreadsPerPage">
+            <summary>
+            Max threads per board page
+            </summary>
+        </member>
+        <member name="P:Chandler.Models.BoardPageModel.Config">
+            <summary>
+            Configuration for the server
             </summary>
         </member>
         <member name="T:Chandler.Models.DeletePageModel">
@@ -630,6 +667,11 @@
             Board this post belongs to
             </summary>
         </member>
+        <member name="P:Chandler.Models.DeletePageModel.Config">
+            <summary>
+            Configuration for the server
+            </summary>
+        </member>
         <member name="T:Chandler.Models.IndexPageModel">
             <summary>
             Index Page Model
@@ -641,6 +683,41 @@
             </summary>
         </member>
         <member name="P:Chandler.Models.IndexPageModel.Config">
+            <summary>
+            Configuration for the server
+            </summary>
+        </member>
+        <member name="T:Chandler.Models.MetadataViewModel">
+            <summary>
+            This model gets used in the partial view for metadata
+            </summary>
+        </member>
+        <member name="P:Chandler.Models.MetadataViewModel.Title">
+            <summary>
+            Page title
+            </summary>
+        </member>
+        <member name="P:Chandler.Models.MetadataViewModel.RelativeUrl">
+            <summary>
+            Page url (relative)
+            </summary>
+        </member>
+        <member name="P:Chandler.Models.MetadataViewModel.Image">
+            <summary>
+            Image url
+            </summary>
+        </member>
+        <member name="P:Chandler.Models.MetadataViewModel.ImageRelative">
+            <summary>
+            Whether the img url is relative
+            </summary>
+        </member>
+        <member name="P:Chandler.Models.MetadataViewModel.Description">
+            <summary>
+            Page description
+            </summary>
+        </member>
+        <member name="P:Chandler.Models.MetadataViewModel.Config">
             <summary>
             Configuration for the server
             </summary>
@@ -668,6 +745,36 @@
         <member name="P:Chandler.Models.NewPostPageModel.IsCommentReply">
             <summary>
             Is the post a reply?
+            </summary>
+        </member>
+        <member name="P:Chandler.Models.NewPostPageModel.Config">
+            <summary>
+            Configuration for the server
+            </summary>
+        </member>
+        <member name="T:Chandler.Models.ThreadPageModel">
+            <summary>
+            Board Page Model
+            </summary>
+        </member>
+        <member name="P:Chandler.Models.ThreadPageModel.BoardInfo">
+            <summary>
+            Info for the board
+            </summary>
+        </member>
+        <member name="P:Chandler.Models.ThreadPageModel.Thread">
+            <summary>
+            Threads belonging to the board
+            </summary>
+        </member>
+        <member name="P:Chandler.Models.ThreadPageModel.Config">
+            <summary>
+            Configuration for the server
+            </summary>
+        </member>
+        <member name="P:Chandler.Models.WebhooksPageModel.Config">
+            <summary>
+            Server config
             </summary>
         </member>
         <member name="T:Chandler.Passworder">

@@ -3,7 +3,10 @@
 <div id="newpost">
     <form action="/thread/create">
         <input type="text" name="username" placeholder="Anonymous">
-        <input type="text" name="topic" placeholder="(Optional) Topic...">
+        @if (!Model.IsCommentReply)
+        {
+            <input type="text" name="topic" placeholder="(Optional) Topic...">
+        }
         @if (Model.IsCommentReply)
         {
             <textarea name="text">>>@Model.ReplyToId</textarea>
@@ -23,3 +26,17 @@
     <br>
     <a href="/board/@Model.BoardTag">Back to board</a>
 </div>
+
+@* This part defines the metadata stuff. *@
+@section metadata
+{
+    @Html.Partial("_Metadata", new MetadataViewModel()
+    {
+        Title = $"{Model.Config.SiteName} - New Post (/{Model.BoardTag}/)",
+        Config = Model.Config,
+        Description = "Create a new post.",
+        Image = Model.Config.SiteLogo,
+        ImageRelative = true,
+        RelativeUrl = Url.RouteUrl(ViewContext.RouteData.Values)
+    })
+}

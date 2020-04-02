@@ -1,4 +1,6 @@
-﻿<div id="addwh">
+﻿@model WebhooksPageModel
+
+<div id="addwh">
     <h1 class="whhone">Add Webhook</h1>
     <div id="newpost" class="whdiv">
         <form id="whsubform" action="/formsub">
@@ -22,3 +24,17 @@
     <br>
     <a href="/" style="margin-left:47%;">Back to Home</a>
 </div>
+
+@* This part defines the metadata stuff. *@
+@section metadata
+{
+    @Html.Partial("_Metadata", new MetadataViewModel()
+    {
+        Title = $"{Model.Config.SiteName} - Discord Webhooks",
+        Config = Model.Config,
+        Description = $"Configure Discord webhooks for {Model.Config.SiteName}",
+        Image = Model.Config.SiteLogo,
+        ImageRelative = true,
+        RelativeUrl = Url.RouteUrl(ViewContext.RouteData.Values)
+    })
+}

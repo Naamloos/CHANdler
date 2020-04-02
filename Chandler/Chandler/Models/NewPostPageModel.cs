@@ -24,5 +24,10 @@
         /// Is the post a reply?
         /// </summary>
         public bool IsCommentReply { get => (this.ReplyToId > -1); }
+
+        /// <summary>
+        /// Configuration for the server
+        /// </summary>
+        public ServerConfig Config { get; set; }
     }
 }

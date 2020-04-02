@@ -37,5 +37,11 @@ namespace Chandler
         /// </summary>
         [JsonProperty("defaultpass")]
         public string DefaultPassword { get; private set; } = "admin";
+
+        /// <summary>
+        /// Required for some metadata
+        /// </summary>
+        [JsonProperty("baseurl")]
+        public string BaseUrl { get; private set; } = "";
     }
 }

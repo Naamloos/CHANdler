@@ -151,15 +151,15 @@ namespace Chandler.Controllers
                 passid = newpass.Id;
             }
 
-            var settings = new TextEncoderSettings();
-            settings.AllowRange(UnicodeRanges.All);
-            settings.ForbidCharacters(new[] { '<', '>' });
-            var encoder = HtmlEncoder.Create(settings);
+            //var settings = new TextEncoderSettings();
+            //settings.AllowRange(UnicodeRanges.All);
+            //settings.ForbidCharacters(new[] { '<', '>' });
+            //var encoder = HtmlEncoder.Create(settings);
 
-            newpost.Text = encoder.Encode(newpost.Text);
-            if (newpost.Image != null) newpost.Image = encoder.Encode(newpost.Image);
-            newpost.Username = encoder.Encode(newpost.Username);
-            if (newpost.Topic != null) newpost.Topic = encoder.Encode(newpost.Topic);
+            //newpost.Text = encoder.Encode(newpost.Text);
+            //if (newpost.Image != null) newpost.Image = encoder.Encode(newpost.Image);
+            //newpost.Username = encoder.Encode(newpost.Username);
+            //if (newpost.Topic != null) newpost.Topic = encoder.Encode(newpost.Topic);
 
             newpost.GeneratePassword = "";
             newpost.PasswordId = passid;

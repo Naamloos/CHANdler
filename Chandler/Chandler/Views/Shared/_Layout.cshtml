@@ -3,14 +3,15 @@
 <head>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <title>CHANdler - Home</title>
     <meta name="description" content="Get a load of this guy - Best Open source board server software" />
-    <meta name="og:icon" content="https://i.kym-cdn.com/photos/images/newsfeed/000/779/388/d33.jpg" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="stylesheet" type="text/css" href="~/css/main.css" />
     <link href="https://fonts.googleapis.com/css?family=Tinos" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="/res/favicon.ico">
+    @RenderSection("metadata")
 </head>
-    <body>
-        @RenderBody()
-    </body>
+<body>
+    @RenderBody()
+    <script type="text/javascript" src="~/js/linkify.js"></script>
+</body>
 </html>

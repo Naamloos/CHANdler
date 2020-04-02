@@ -10,3 +10,17 @@
     <br>
     <a href="/board/@Model.BoardTag">Back to board</a>
 </div>
+
+@* This part defines the metadata stuff. *@
+@section metadata
+{
+    @Html.Partial("_Metadata", new MetadataViewModel()
+    {
+        Title = $"{Model.Config.SiteName} - Delete post",
+        Config = Model.Config,
+        Description = "Delete a post",
+        Image = Model.Config.SiteLogo,
+        ImageRelative = true,
+        RelativeUrl = Url.RouteUrl(ViewContext.RouteData.Values)
+    })
+}

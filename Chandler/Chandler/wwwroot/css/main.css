@@ -16,7 +16,7 @@ a {
 
 #boardmeta {
     padding-top: 50px;
-    padding-bottom: 50px;
+    padding-bottom: 15px;
     margin: auto;
     text-align: center;
 }
@@ -121,4 +121,16 @@ input, textarea, button {
 
 #sitename {
     margin-bottom: 15px;
+}
+
+#pages {
+    padding-bottom: 15px;
+    margin: auto;
+    text-align: center;
+    display: block;
+}
+
+.threadtitle
+{
+    color: #ffffff;
 }

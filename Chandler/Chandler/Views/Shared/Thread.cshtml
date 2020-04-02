@@ -1,0 +1,107 @@
+﻿@model ThreadPageModel
+
+<div id="boardmeta">
+    <h1 class="board_title">@Model.BoardInfo.Name</h1>
+    <p class="board_welcome">@Model.BoardInfo.Description</p>
+    <br />
+    <img class="board_img" src="@Model.BoardInfo.ImageUrl">
+    <br />
+    <a href="/board/@Model.BoardInfo.Tag">Back to board</a>
+    <a href="/new?board=@Model.BoardInfo.Tag">Post new thread</a>
+</div>
+
+<div id="boardthreads">
+    @{
+        var linkreg = new Regex(@"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)");
+        var ytreg = new Regex(@"^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$");
+        var nlreg = new Regex(@"(?:\r\n|\r|\n|&#xD;&#xA;)");
+        var replyidreg = new Regex(@"(?:&gt;&gt;[\d]+)");
+        var ytidreg = new Regex(@"(?:(?:v=[\d\w]+)|(?:be\/[\d\w]+))", RegexOptions.IgnoreCase);
+
+        var mainthread = Model.Thread;
+        <div class="thread">
+            <div class="threadheader">
+                <p>
+                    <b>Thread by: @mainthread.Username</b>
+                    &nbsp;
+                    @if (!string.IsNullOrEmpty(mainthread.Topic))
+                    {
+                        <b class="threadtitle">@mainthread.Topic</b>
+                    }
+                    (ID: @mainthread.Id)
+                </p>
+            </div>
+            <div class="threadtext">
+                <span style="white-space: pre-line">
+                    @{
+                        if (mainthread.Image != null)
+                        {
+                            <img class="imgsmall" onclick="imgclick(this)" src="@mainthread.Image">
+                        }
+                        <p class="_linkify">@mainthread.Text</p>
+                        <p>
+                            <i><a href="/new?board=@Model.BoardInfo.Tag&parent_id=@mainthread.Id">Reply</a></i>
+                            <i><a href="/delete?id=@mainthread.Id&board_tag=@Model.BoardInfo.Tag">Delete</a></i>
+                        </p>
+                    }
+                </span>
+            </div>
+
+            @foreach (var comment in mainthread.ChildThreads.OrderBy(x => x.Id))
+            {
+                <div class="comment">
+                    <p><b>@comment.Username</b> (ID: @comment.Id)</p>
+                    <div class="commenttext">
+                            @{
+                                var newtext = nlreg.Replace(comment.Text, "<br />");
+                                if (comment.IsCommentReply)
+                                {
+                                    var temptxt = replyidreg.Replace(newtext, "<a href=\"#comment:##ID##\">>>##ID##</a>");
+                                    newtext = temptxt.Replace("##ID##", comment.ReplyToId.ToString());
+                                }
+                                <p name="comment:@comment.Id" class="_linkify">@newtext</p>
+                                <p>
+                                    <i><a href="/new?board=@Model.BoardInfo.Tag&parent_id=@mainthread.Id&replytoid=@comment.Id">Reply</a></i>
+                                    <i><a href="/delete?id=@comment.Id&board_tag=@Model.BoardInfo.Tag">Delete</a></i>
+                                </p>
+                            }
+                    </div>
+                </div>
+            }
+
+        </div>
+    }
+</div>
+
+@* This part defines the metadata stuff. *@
+@section metadata
+{
+    @{
+        var meta = new MetadataViewModel()
+        {
+            Title = $"{Model.Config.SiteName} - /{Model.BoardInfo.Tag}/ ",
+            Config = Model.Config,
+            Description = Model.Thread.Text,
+            RelativeUrl = Url.RouteUrl(ViewContext.RouteData.Values),
+            Image = Model.Config.SiteLogo,
+            ImageRelative = true
+        };
+
+        if (!string.IsNullOrEmpty(Model.Thread.Topic))
+        {
+            meta.Title += $"{Model.Thread.Topic}";
+        }
+        else
+        {
+            meta.Title += $"Thread by: {Model.Thread.Username}";
+        }
+
+        if (!string.IsNullOrEmpty(this.Model.Thread.Image))
+        {
+            meta.ImageRelative = false;
+            meta.Image = this.Model.Thread.Image;
+        }
+
+        @Html.Partial("_Metadata", meta)
+    }
+}

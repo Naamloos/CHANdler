@@ -86,7 +86,7 @@ namespace Chandler
                     {
                         Name = "GNU General Public License v3.0",
                         Url = new Uri("https://github.com/Naamloos/CHANdler/blob/master/LICENSE")
-                    }
+                    },
                 });
 
                 x.IncludeXmlComments($"{AppContext.BaseDirectory}/{Assembly.GetExecutingAssembly().GetName().Name}.xml");
@@ -134,6 +134,14 @@ namespace Chandler
                     Description = "haha cool and good dank memes",
                 });
 
+                ctx.Boards.Add(new Board()
+                {
+                    Name = "Meta",
+                    Tag = "meta",
+                    ImageUrl = "/res/wrench.png",
+                    Description = "About CHANdler itself, e.g. development talk.",
+                });
+
                 var hash = Passworder.GenerateHash(this._config.DefaultPassword, this._config.DefaultPassword);
 
                 ctx.Passwords.Add(new Password()
@@ -153,6 +161,8 @@ namespace Chandler
         {
             if (env.EnvironmentName == "Development") app.UseDeveloperExceptionPage();
 
+            //app.UseIpRateLimiting();
+
             app.UseSwagger();
             app.UseSwaggerUI(x =>
             {
@@ -161,7 +171,6 @@ namespace Chandler
             });
 
             app.UseCors("publicpolicy");
-            app.UseIpRateLimiting();
             app.UseStaticFiles();
 
             app.UseFileServer(new FileServerOptions() 
@@ -170,7 +179,7 @@ namespace Chandler
                 RequestPath = "/res"
             });
 
-            app.UseHttpsRedirection();
+            //app.UseHttpsRedirection();
             app.UseMvc(routes =>
             {
                 routes.MapRoute(

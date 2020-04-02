@@ -1,0 +1,29 @@
+﻿@model MetadataViewModel
+@* All metadata.  *@
+
+@{ 
+    var baseurl = new Uri(Model.Config.BaseUrl);
+    var imglink = new Uri(Model.Config.BaseUrl);
+
+    if(Model.ImageRelative)
+    {
+        imglink = new Uri(imglink, Model.Image);
+    }
+    else
+    {
+        imglink = new Uri(Model.Image);
+    }
+
+
+    var path = new Uri(baseurl, Model.RelativeUrl);
+}
+
+<title>@Model.Title</title>
+<meta property="og:title" content="@Model.Title" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="@path" />
+<meta property="og:image" content="@imglink" />
+<meta property="og:description" content="@Model.Description" />
+
+<meta name="twitter:card" content="summary" />
+<meta property="og:site_name" content="@Model.Config.SiteName">
