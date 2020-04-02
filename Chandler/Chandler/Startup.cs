@@ -22,40 +22,42 @@ namespace Chandler
 {
     public class Startup
     {
+        public IConfiguration Configuration { get; }
+
         private readonly ServerConfig _config;
         private readonly Database _db;
         private readonly ServerMeta _meta;
-        private string currentdir;
+        private readonly string resfolderpath;
 
         public Startup(IConfiguration configuration)
         {
 
             Configuration = configuration;
 
-            currentdir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            var currentdir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             Directory.SetCurrentDirectory(currentdir);
+
+            resfolderpath = Path.Combine(currentdir, "res");
+            var conffolderpath = Path.Combine(currentdir, "config");
+            var conffilepath = Path.Combine(currentdir, "config/config.json");
+
             // Ensure directories exist
-           if (!Directory.Exists(Path.Combine(currentdir, "res")))
-                Directory.CreateDirectory(Path.Combine(currentdir, "res"));
+            if (!Directory.Exists(resfolderpath))
+                Directory.CreateDirectory(resfolderpath);
 
-            if (!Directory.Exists(Path.Combine(currentdir, "config")))
-                Directory.CreateDirectory(Path.Combine(currentdir, "config"));
+            if (!Directory.Exists(conffolderpath))
+                Directory.CreateDirectory(conffolderpath);
 
-            if (!File.Exists(Path.Combine(currentdir, "config/config.json"))) 
+            if (!File.Exists(conffilepath)) 
             {
-                File.Create(Path.Combine(currentdir, "config/config.json")).Close();
-                File.WriteAllText(Path.Combine(currentdir, "config/config.json"), 
-                    JsonConvert.SerializeObject(new ServerConfig()));
+                File.Create(conffilepath).Close();
+                File.WriteAllText(conffilepath, JsonConvert.SerializeObject(new ServerConfig(), Formatting.Indented));
             }
 
-            _config = JsonConvert.DeserializeObject<ServerConfig>(
-                File.ReadAllText(Path.Combine(currentdir, "config/config.json")));
-            
+            _config = JsonConvert.DeserializeObject<ServerConfig>(File.ReadAllText(conffilepath));
             _db = new Database(_config.Provider, _config.ConnectionString);
             _meta = new ServerMeta();
         }
-
-        public IConfiguration Configuration { get; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
@@ -95,6 +97,7 @@ namespace Chandler
             services.AddMvc(x => x.EnableEndpointRouting = false)
                 .SetCompatibilityVersion(CompatibilityVersion.Version_3_0)
                 .AddControllersAsServices();
+
             services.AddSingleton(_db);
             services.AddSingleton(_meta);
             services.AddSingleton(_config);
@@ -142,13 +145,13 @@ namespace Chandler
                     Description = "About CHANdler itself, e.g. development talk.",
                 });
 
-                var hash = Passworder.GenerateHash(this._config.DefaultPassword, this._config.DefaultPassword);
+                (var hash, var salt) = Passworder.GenerateHash(this._config.DefaultPassword, this._config.DefaultPassword);
 
                 ctx.Passwords.Add(new Password()
                 {
                     Id = -1,
-                    Salt = hash.Salt,
-                    Hash = hash.Hash
+                    Hash = hash,
+                    Salt = salt
                 });
 
                 ctx.SaveChanges();
@@ -161,7 +164,7 @@ namespace Chandler
         {
             if (env.EnvironmentName == "Development") app.UseDeveloperExceptionPage();
 
-            //app.UseIpRateLimiting();
+            app.UseIpRateLimiting();
 
             app.UseSwagger();
             app.UseSwaggerUI(x =>
@@ -175,7 +178,7 @@ namespace Chandler
 
             app.UseFileServer(new FileServerOptions() 
             { 
-                FileProvider = new PhysicalFileProvider(Path.Combine(currentdir, "res")),
+                FileProvider = new PhysicalFileProvider(resfolderpath),
                 RequestPath = "/res"
             });
 

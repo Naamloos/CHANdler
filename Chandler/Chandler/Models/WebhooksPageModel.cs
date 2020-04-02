@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-namespace Chandler.Models
+﻿namespace Chandler.Models
 {
+    /// <summary>
+    /// Webhooks page model
+    /// </summary>
     public class WebhooksPageModel
     {
         /// <summary>

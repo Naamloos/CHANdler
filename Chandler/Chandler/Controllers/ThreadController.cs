@@ -22,7 +22,6 @@ namespace Chandler.Controllers
         private event PostCreatedEvent PostCreated;
 
         private readonly Database database;
-        private readonly ServerMeta meta;
         private readonly ServerConfig config;
         private readonly DatabaseContext ctx;
 
@@ -30,12 +29,10 @@ namespace Chandler.Controllers
         /// Thread API Ctor
         /// </summary>
         /// <param name="database"></param>
-        /// <param name="meta"></param>
         /// <param name="conf"></param>
-        public ThreadController(Database database, ServerMeta meta, ServerConfig conf)
+        public ThreadController(Database database, ServerConfig conf)
         {
             this.database = database;
-            this.meta = meta;
             this.config = conf;
             this.ctx = this.database.GetContext();
             this.ctx.Database.EnsureCreated();
@@ -140,11 +137,11 @@ namespace Chandler.Controllers
             int passid = -1;
             if (!string.IsNullOrWhiteSpace(passw))
             {
-                var hash = Passworder.GenerateHash(passw, this.config.DefaultPassword);
+                (var hash, var salt) = Passworder.GenerateHash(passw, this.config.DefaultPassword);
                 var newpass = new Password()
                 {
-                    Hash = hash.Hash,
-                    Salt = hash.Salt
+                    Hash = hash,
+                    Salt = salt
                 };
                 ctx.Passwords.Add(newpass);
                 ctx.SaveChanges();

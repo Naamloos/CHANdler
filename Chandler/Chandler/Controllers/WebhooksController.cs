@@ -15,19 +15,13 @@ namespace Chandler.Controllers
     public class WebhooksController : Controller
     {
         const string WebhookRegex = @"(https:\/\/(?:canary\.|)discordapp\.com\/api\/webhooks\/([0-9]+)\/(.+))";
-        ServerConfig Config { get; set; }
         Database Database { get; set; }
 
         /// <summary>
         /// Webhook Ctor
         /// </summary>
         /// <param name="db"></param>
-        /// <param name="config"></param>
-        public WebhooksController(Database db, ServerConfig config)
-        {
-            this.Config = config;
-            this.Database = db;
-        }
+        public WebhooksController(Database db) => this.Database = db;
 
         /// <summary>
         /// Parses a webhook url into its Id and Token
@@ -61,16 +55,16 @@ namespace Chandler.Controllers
             if (!ctx.Boards.Any(x => x.Tag == boardtag)) return this.BadRequest("The given board tag doesn't exist");
             #endregion
 
-            var wbhk = ParseWebhook(url);
-            if (ctx.WebhookSubscritptions.Any(x => x.Token == wbhk.Token && x.WebhookId == wbhk.Id))
+            (var whid, var whtoken) = ParseWebhook(url);
+            if (ctx.WebhookSubscritptions.Any(x => x.Token == whtoken && x.WebhookId == whid))
                 return this.BadRequest("The given url has already been added");
 
             var whs = new WebhookSubscription()
             {
                 BoardTag = boardtag,
                 ThreadId = threadid,
-                Token = wbhk.Item2,
-                WebhookId = wbhk.Item1
+                Token = whtoken,
+                WebhookId = whid
             };
 
             ctx.WebhookSubscritptions.Add(whs);
@@ -88,13 +82,13 @@ namespace Chandler.Controllers
         [HttpDelete("unsubscribe")]
         public ActionResult<bool> UnSubscribeWebhook([FromQuery]string url)
         {
-            var whp = ParseWebhook(url);
+            (var whid, var whtoken) = ParseWebhook(url);
             
             using var ctx = this.Database.GetContext();
-            if (!ctx.WebhookSubscritptions.Any(x => x.Token == whp.Token && x.WebhookId == whp.Id))
+            if (!ctx.WebhookSubscritptions.Any(x => x.Token == whtoken && x.WebhookId == whid))
                 return this.BadRequest("The given url has not been added");
 
-            var matches = ctx.WebhookSubscritptions.Where(x => x.WebhookId == whp.Id && x.Token == whp.Token);
+            var matches = ctx.WebhookSubscritptions.Where(x => x.Token == whtoken && x.WebhookId == whid);
             ctx.WebhookSubscritptions.RemoveRange(matches);
             ctx.SaveChanges();
             return true;

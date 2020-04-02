@@ -154,12 +154,11 @@
             Api Controller For Threads
             </summary>
         </member>
-        <member name="M:Chandler.Controllers.ThreadController.#ctor(Chandler.Data.Database,Chandler.Data.ServerMeta,Chandler.ServerConfig)">
+        <member name="M:Chandler.Controllers.ThreadController.#ctor(Chandler.Data.Database,Chandler.ServerConfig)">
             <summary>
             Thread API Ctor
             </summary>
             <param name="database"></param>
-            <param name="meta"></param>
             <param name="conf"></param>
         </member>
         <member name="M:Chandler.Controllers.ThreadController.GetThreads(System.String,System.Boolean)">
@@ -210,12 +209,11 @@
             Webhook controller
             </summary>
         </member>
-        <member name="M:Chandler.Controllers.WebhooksController.#ctor(Chandler.Data.Database,Chandler.ServerConfig)">
+        <member name="M:Chandler.Controllers.WebhooksController.#ctor(Chandler.Data.Database)">
             <summary>
             Webhook Ctor
             </summary>
             <param name="db"></param>
-            <param name="config"></param>
         </member>
         <member name="M:Chandler.Controllers.WebhooksController.ParseWebhook(System.String)">
             <summary>
@@ -770,6 +768,11 @@
         <member name="P:Chandler.Models.ThreadPageModel.Config">
             <summary>
             Configuration for the server
+            </summary>
+        </member>
+        <member name="T:Chandler.Models.WebhooksPageModel">
+            <summary>
+            Webhooks page model
             </summary>
         </member>
         <member name="P:Chandler.Models.WebhooksPageModel.Config">

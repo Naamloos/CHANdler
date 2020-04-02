@@ -50,25 +50,17 @@
             @foreach (var comment in mainthread.ChildThreads.OrderBy(x => x.Id))
             {
                 <div class="comment">
+                    <a name="comment:@mainthread.Id"></a>
                     <p><b>@comment.Username</b> (ID: @comment.Id)</p>
                     <div class="commenttext">
-                            @{
-                                var newtext = nlreg.Replace(comment.Text, "<br />");
-                                if (comment.IsCommentReply)
-                                {
-                                    var temptxt = replyidreg.Replace(newtext, "<a href=\"#comment:##ID##\">>>##ID##</a>");
-                                    newtext = temptxt.Replace("##ID##", comment.ReplyToId.ToString());
-                                }
-                                <p name="comment:@comment.Id" class="_linkify">@newtext</p>
-                                <p>
-                                    <i><a href="/new?board=@Model.BoardInfo.Tag&parent_id=@mainthread.Id&replytoid=@comment.Id">Reply</a></i>
-                                    <i><a href="/delete?id=@comment.Id&board_tag=@Model.BoardInfo.Tag">Delete</a></i>
-                                </p>
-                            }
+                        <p class="_linkify">@comment.Text</p>
+                        <p>
+                            <i><a href="/new?board=@Model.BoardInfo.Tag&parent_id=@mainthread.Id&replytoid=@comment.Id">Reply</a></i>
+                            <i><a href="/delete?id=@comment.Id&board_tag=@Model.BoardInfo.Tag">Delete</a></i>
+                        </p>
                     </div>
                 </div>
             }
-
         </div>
     }
 </div>

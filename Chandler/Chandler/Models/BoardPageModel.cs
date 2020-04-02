@@ -21,7 +21,7 @@ namespace Chandler.Models
         /// <summary>
         /// Thread IDs for Threads with more than 5 responses
         /// </summary>
-        public List<int> BigThreads { get; set; }
+        public IEnumerable<int> BigThreads { get; set; }
 
         /// <summary>
         /// Amount of pages available

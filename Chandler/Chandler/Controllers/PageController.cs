@@ -23,6 +23,7 @@ namespace Chandler.Controllers
         private readonly DatabaseContext ctx;
         private readonly ThreadController threadcontroller;
         private readonly WebhooksController webhookscontroller;
+        private const int MAX_THREADS_ON_INDEX = 10;
 
         /// <summary>
         /// Page Ctor
@@ -52,7 +53,6 @@ namespace Chandler.Controllers
             Config = this.config
         });
 
-        private const int MAX_THREADS_ON_INDEX = 10;
         /// <summary>
         /// Board page
         /// </summary>
@@ -86,13 +86,11 @@ namespace Chandler.Controllers
                 x.ChildThreads = this.ctx.Threads.Where(a => a.ParentId == x.Id).OrderByDescending(a => a.Id).Take(5);
             });
 
-            List<int> bigOnes = new List<int>();
+            var  bigOnes = new List<int>();
             foreach(var t in threads)
             {
-                if(this.ctx.Threads.Where(a => a.ParentId ==t.Id).Count() > 5)
-                {
+                if(this.ctx.Threads.Where(a => a.ParentId ==t.Id).Count() > 5) 
                     bigOnes.Add(t.Id);
-                }
             }
 
             return this.View(new BoardPageModel()

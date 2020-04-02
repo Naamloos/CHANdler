@@ -15,26 +15,36 @@
     <div id="pages">
         @if (this.Model.PageCount > 1)
         {
-            @for (int i = 0; i < this.Model.PageCount; i++)
+            if (this.Model.Currentpage > 1)
             {
-                if (i + 1 == this.Model.Currentpage)
+                <a href="/board/@Model.BoardInfo.Tag?p=@(this.Model.Currentpage-1)" rel="prev">&lt;</a>
+            }
+            @for (int i = 1; i <= this.Model.PageCount; i++)
+            {
+
+                if (i == this.Model.Currentpage)
                 {
-                    @(i + 1)
+                    @(i)
                 }
                 else
                 {
-                    <a href="/board/@Model.BoardInfo.Tag?p=@(i + 1)">@(i + 1)</a>
+                    <a href="/board/@Model.BoardInfo.Tag?p=@(i)">@(i)</a>
                 }
                 @Html.Raw("&nbsp");
+            }
+            if (this.Model.Currentpage < this.Model.PageCount)
+            {
+                <a href="/board/@Model.BoardInfo.Tag?p=@(this.Model.Currentpage+1)" rel="next">&gt;</a>
             }
         }
     </div>
 
     @{
-        foreach (var mainthread in Model.Threads.Where(x => x.ParentId == 0))
+        foreach (var mainthread in Model.Threads.Where(x => x.ParentId < 1))
         {
             var a = Model.Threads.ToList();
             <div class="thread">
+                <a name="comment:@mainthread.Id"></a>
                 <div class="threadheader">
                     <p>
                         <b>Thread by: @mainthread.Username</b>
@@ -70,9 +80,10 @@
                 @foreach (var comment in mainthread.ChildThreads.OrderBy(x => x.Id))
                 {
                     <div class="comment">
+                        <a name="comment:@mainthread.Id"></a>
                         <p><b>@comment.Username</b> (ID: @comment.Id)</p>
                         <div class="commenttext">
-                            <p name="comment:@comment.Id" class="_linkify">@comment.Text</p>
+                            <p class="_linkify">@comment.Text</p>
                             <p>
                                 <i><a href="/new?board=@Model.BoardInfo.Tag&parent_id=@mainthread.Id&replytoid=@comment.Id">Reply</a></i>
                                 <i><a href="/delete?id=@comment.Id&board_tag=@Model.BoardInfo.Tag">Delete</a></i>
@@ -85,12 +96,16 @@
         }
     }
 
-
     <div id="pages">
         @if (this.Model.PageCount > 1)
         {
+            if (this.Model.Currentpage > 1)
+            {
+                <a href="/board/@Model.BoardInfo.Tag?p=@(this.Model.Currentpage-1)" rel="prev">&lt;</a>
+            }
             @for (int i = 1; i <= this.Model.PageCount; i++)
             {
+
                 if (i == this.Model.Currentpage)
                 {
                     @(i)
@@ -100,6 +115,10 @@
                     <a href="/board/@Model.BoardInfo.Tag?p=@(i)">@(i)</a>
                 }
                 @Html.Raw("&nbsp");
+            }
+            if (this.Model.Currentpage < this.Model.PageCount)
+            {
+                <a href="/board/@Model.BoardInfo.Tag?p=@(this.Model.Currentpage+1)" rel="next">&gt;</a>
             }
         }
     </div>
