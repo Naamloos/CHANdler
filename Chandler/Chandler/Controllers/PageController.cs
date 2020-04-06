@@ -1,6 +1,7 @@
 ﻿using Chandler.Data;
 using Chandler.Data.Entities;
 using Chandler.Models;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using System;
@@ -58,16 +59,17 @@ namespace Chandler.Controllers
         /// </summary>
         /// <param name="tag">Board Tag</param>
         /// <param name="p">Page to load</param>
+        /// <param name="status">Api Action status to return with view</param>
         /// <returns>Board page for the given board tag</returns>
         [Route("board/{tag}"), HttpGet]
-        public IActionResult Board(string tag, [FromQuery]int p = 1)
+        public IActionResult Board(string tag, [FromQuery]int p = 1, ApiActionStatus status = null)
         {
             var threadcount = this.ctx.Threads.Where(x => x.BoardTag == tag && x.ParentId < 1).Count();
 
             var pagecount = 1;
             // calculating page count
             var remainder = threadcount % MAX_THREADS_ON_INDEX;
-            if(threadcount - remainder >= MAX_THREADS_ON_INDEX) // we can only have more than 1 page when we have over 10 threads
+            if (threadcount - remainder >= MAX_THREADS_ON_INDEX) // we can only have more than 1 page when we have over 10 threads
             {
                 pagecount = ((threadcount - remainder) / MAX_THREADS_ON_INDEX);
                 if (remainder > 0)
@@ -80,16 +82,16 @@ namespace Chandler.Controllers
                 .Skip(Math.Abs(p - 1) * MAX_THREADS_ON_INDEX)
                 .Take(MAX_THREADS_ON_INDEX)
                 .ToList();
-            
-            threads.ToList().ForEach(x => 
+
+            threads.ToList().ForEach(x =>
             {
                 x.ChildThreads = this.ctx.Threads.Where(a => a.ParentId == x.Id).OrderByDescending(a => a.Id).Take(5);
             });
 
-            var  bigOnes = new List<int>();
-            foreach(var t in threads)
+            var bigOnes = new List<int>();
+            foreach (var t in threads)
             {
-                if(this.ctx.Threads.Where(a => a.ParentId ==t.Id).Count() > 5) 
+                if (this.ctx.Threads.Where(a => a.ParentId == t.Id).Count() > 5)
                     bigOnes.Add(t.Id);
             }
 
@@ -101,7 +103,8 @@ namespace Chandler.Controllers
                 PageCount = pagecount,
                 Currentpage = p,
                 MaxThreadsPerPage = MAX_THREADS_ON_INDEX,
-                Config = this.config
+                Config = this.config,
+                ActionStatus = status
             });
         }
 
@@ -177,7 +180,7 @@ namespace Chandler.Controllers
         /// <param name="replytoid">Id of the post this post is replying to</param>
         /// <returns>Board page</returns>
         [Route("thread/create"), HttpGet]
-        public async Task<IActionResult> CreatePostAndRedirect([FromQuery]string boardtag, [FromQuery]string text, [FromQuery]int parent_id = -1, [FromQuery]string username = null, [FromQuery]string topic = null, [FromQuery]string password = null, [FromQuery]string imageurl = null, [FromQuery]long replytoid = -1)
+        public async Task<IActionResult> Board([FromQuery]string boardtag, [FromQuery]string text, [FromQuery]int parent_id = -1, [FromQuery]string username = null, [FromQuery]string topic = null, [FromQuery]string password = null, [FromQuery]string imageurl = null, [FromQuery]long replytoid = -1)
         {
             var response = await threadcontroller.CreatePost(new Thread()
             {
@@ -190,8 +193,14 @@ namespace Chandler.Controllers
                 ReplyToId = replytoid,
                 Topic = topic
             });
-
-            return LocalRedirect($"/board/{boardtag}");
+            var badres = response.Result as BadRequestObjectResult;
+            var boardview = (ViewResult)this.Board(boardtag, status: new ApiActionStatus()
+            {
+                Message = (badres == null) ? "Thread posted" : badres.Value.ToString(),
+                ResponseCode = (badres == null) ? 200 : 400,
+                Title = "Post"
+            });
+            return this.View("Board", boardview.Model);
         }
 
         /// <summary>
@@ -205,7 +214,14 @@ namespace Chandler.Controllers
         public IActionResult DeletePostFromQuery([FromQuery]int postid, [FromQuery]string password, [FromQuery]string board_tag)
         {
             var res = threadcontroller.DeletePost(postid, password);
-            return this.LocalRedirect($"/board/{board_tag}");
+            var badres = res.Result as BadRequestObjectResult;
+            var boardview = (ViewResult)this.Board(board_tag, status: new ApiActionStatus()
+            {
+                Message = (badres == null) ? "Thread deleted" : badres.Value.ToString(),
+                ResponseCode = (badres == null) ? 200 : 400,
+                Title = "Delete"
+            });
+            return this.View("Board", boardview.Model);
         }
 
         /// <summary>
@@ -215,23 +231,47 @@ namespace Chandler.Controllers
         /// <param name="boardtag">Board tag to listen to </param>
         /// <param name="threadid">Thread Id to listen to</param>
         /// <returns>Main Index Page</returns>
-        [Route("formsub"), HttpGet]
+        [Route("webhooksub"), HttpGet]
         public IActionResult FormSub([FromQuery]string url, [FromQuery]string boardtag = null, [FromQuery]int? threadid = null)
         {
             var res = webhookscontroller.SubscribeWebhook(url, boardtag, threadid);
-            return LocalRedirect("/");
+            var badres = res.Result as BadRequestObjectResult;
+            return this.View("Index", new IndexPageModel()
+            {
+                ActionStatus = new ApiActionStatus()
+                {
+                    Message = (badres != null) ? badres.Value.ToString() : "Success",
+                    ResponseCode = (res.Result as OkObjectResult) == null ? 400 : 200,
+                    Title = "Webhook"
+                },
+                Boards = this.ctx.Boards,
+                Config = this.config
+            });
         }
 
         /// <summary>
         /// Deletes a webhook link and returns to the base server address
         /// </summary>
         /// <param name="url">URL of the webhook</param>
+        /// <param name="boardtag">Tag of the board</param>
+        /// <param name="threadid">ID of the thread</param>
         /// <returns>Main Index Page</returns>
-        [Route("formunsub"), HttpGet]
-        public IActionResult FormUnsub([FromQuery]string url)
+        [Route("webhookunsub"), HttpGet]
+        public IActionResult FormUnsub([FromQuery]string url, [FromQuery]string boardtag = null, [FromQuery]int? threadid = null)
         {
-            var res = webhookscontroller.UnSubscribeWebhook(url);
-            return LocalRedirect("/");
+            var res = webhookscontroller.UnSubscribeWebhook(url, boardtag, threadid);
+            var badres = res as BadRequestObjectResult;
+            return this.View("Index", new IndexPageModel()
+            {
+                ActionStatus = new ApiActionStatus()
+                {
+                    Message = (badres != null) ? badres.Value.ToString() : "Success",
+                    ResponseCode = (badres != null) ? 400 : 200,
+                    Title = "Webhook"
+                },
+                Boards = this.ctx.Boards,
+                Config = this.config
+            });
         }
     }
 }

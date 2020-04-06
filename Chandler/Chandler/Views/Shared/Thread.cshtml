@@ -32,7 +32,7 @@
                 </p>
             </div>
             <div class="threadtext">
-                <span style="white-space: pre-line">
+                <div style="white-space: pre-line">
                     @{
                         if (mainthread.Image != null)
                         {
@@ -44,7 +44,7 @@
                             <i><a href="/delete?id=@mainthread.Id&board_tag=@Model.BoardInfo.Tag">Delete</a></i>
                         </p>
                     }
-                </span>
+                </div>
             </div>
 
             @foreach (var comment in mainthread.ChildThreads.OrderBy(x => x.Id))

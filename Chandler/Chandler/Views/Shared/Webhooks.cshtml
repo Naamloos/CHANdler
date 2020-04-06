@@ -3,10 +3,10 @@
 <div id="addwh">
     <h1 class="whhone">Add Webhook</h1>
     <div id="newpost" class="whdiv">
-        <form id="whsubform" action="/formsub" style="overflow:auto;">
-            <input type="text" name="url" placeholder="Webhook URL">
-            <input type="text" name="boardtag" placeholder="Board Tag">
-            <input type="text" name="threadid" placeholder="Thread ID">
+        <form id="whsubform" action="/webhooksub" style="overflow:auto;">
+            <input class="whinp" type="text" name="url" placeholder="Webhook URL">
+            <input class="whinp" type="text" name="boardtag" placeholder="Tag of the board to subscribe to" />
+            <input class="whinp" type="text" name="threadid" placeholder="ID of the thread to subscribe to" />
             <input type="submit" />
         </form>
         <br>
@@ -14,8 +14,10 @@
     <br />
     <h1 class="whhone">Remove Webhook</h1>
     <div id="newpost" class="whdiv">
-        <form id="whsubform" action="/formunsub" style="overflow:auto;">
-            <input type="text" name="url" placeholder="Webhook URL">
+        <form id="whsubform" action="/webhookunsub" style="overflow:auto;">
+            <input class="whinp" type="text" name="url" placeholder="Webhook URL">
+            <input class="whinp" type="text" name="boardtag" placeholder="Tag of the board to unsubscribe from" />
+            <input class="whinp" type="text" name="threadid" placeholder="ID of the thread to unsubscribe from" />
             <input type="submit" />
         </form>
         <br>

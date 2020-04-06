@@ -17,5 +17,10 @@ namespace Chandler.Models
         /// Configuration for the server
         /// </summary>
         public ServerConfig Config { get; set; }
+
+        /// <summary>
+        /// The status of an api action
+        /// </summary>
+        public ApiActionStatus ActionStatus { get; set; }
     }
 }

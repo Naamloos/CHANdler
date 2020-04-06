@@ -1,5 +1,15 @@
 ﻿@model IndexPageModel
 
+@if (Model.ActionStatus != null && Model.ActionStatus?.ResponseCode == 400)
+{
+    <div class="alert">
+        <h2>Attention</h2>
+        <span class="closebtn" onclick="this.parentElement.style.display='none';">&times;</span>
+        <br />
+        <strong>@Model.ActionStatus.Title:</strong> @Model.ActionStatus.Message
+    </div>
+}
+
 <div id="home">
     <img id="sitelogo" src="@Model.Config.SiteLogo">
     <h1 id="sitename">@Model.Config.SiteName</h1>

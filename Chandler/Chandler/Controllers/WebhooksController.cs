@@ -43,6 +43,7 @@ namespace Chandler.Controllers
         /// <param name="boardtag">The tag of the board to listen to</param>
         /// <param name="threadid">The ID of the thread to listen to</param>
         /// <returns>WebhookSubscription Object</returns>
+        /// <response code="400">When no board tag or thread id has been sent, the url is empty, the url is in valid, the board/thread doesnt exist, or when the webhook has already been assigned to the board/thread</response>
         [HttpGet("subscribe")]
         public ActionResult<WebhookSubscription> SubscribeWebhook([FromQuery]string url, [FromQuery]string boardtag = null, [FromQuery]int? threadid = null)
         {
@@ -52,12 +53,20 @@ namespace Chandler.Controllers
             if (boardtag == null && threadid == null) return this.BadRequest("No board tag or thread id has been provided");
             if (string.IsNullOrEmpty(url)) return this.BadRequest("The provided url was empty");
             if (!new Regex(WebhookRegex).IsMatch(url)) return this.BadRequest("The provided url was not a valid discord webhook url");
-            if (!ctx.Boards.Any(x => x.Tag == boardtag)) return this.BadRequest("The given board tag doesn't exist");
+            if (!ctx.Boards.Any(x => x.Tag == boardtag) && threadid == null) return this.BadRequest("The given board tag doesn't exist");
+            if (!ctx.Threads.Any(x => x.Id == threadid) && boardtag == null) return this.BadRequest("The given thread id doesn't exist");
             #endregion
 
             (var whid, var whtoken) = ParseWebhook(url);
-            if (ctx.WebhookSubscritptions.Any(x => x.Token == whtoken && x.WebhookId == whid))
-                return this.BadRequest("The given url has already been added");
+            var wh = ctx.WebhookSubscritptions.FirstOrDefault(x => x.Token == whtoken && x.WebhookId == whid);
+            if (wh != null)
+            {
+                if (wh.BoardTag != null && wh.BoardTag == boardtag)
+                    return this.BadRequest("The webhook url has already been assigned to this board");
+
+                else if (wh.ThreadId > 0 && wh.ThreadId == threadid)
+                    return this.BadRequest("The webhook url has already been assigned to this thread");
+            }
 
             var whs = new WebhookSubscription()
             {
@@ -77,21 +86,26 @@ namespace Chandler.Controllers
         /// Ubsubscribes a webhook
         /// </summary>
         /// <param name="url">Webhook's URL</param>
-        /// <returns>True on success</returns>
+        /// <param name="boardtag">The tag of the board to unsub from</param>
+        /// <param name="threadid">The Id of the thread to unsub from</param>
+        /// <returns>200 OK on success</returns>
         /// <response code="400">When ID is invalid or password is incorrect</response>
         [HttpDelete("unsubscribe")]
-        public ActionResult<bool> UnSubscribeWebhook([FromQuery]string url)
+        public IActionResult UnSubscribeWebhook([FromQuery]string url, [FromQuery]string boardtag = null, [FromQuery]int? threadid = null)
         {
+            if (boardtag == null && threadid == null)
+                return this.BadRequest("No board tag or thread id was given");
+
             (var whid, var whtoken) = ParseWebhook(url);
-            
+
             using var ctx = this.Database.GetContext();
             if (!ctx.WebhookSubscritptions.Any(x => x.Token == whtoken && x.WebhookId == whid))
                 return this.BadRequest("The given url has not been added");
 
-            var matches = ctx.WebhookSubscritptions.Where(x => x.Token == whtoken && x.WebhookId == whid);
+            var matches = ctx.WebhookSubscritptions.Where(x => (x.Token == whtoken && x.WebhookId == whid) && (x.BoardTag == boardtag || x.ThreadId == threadid));
             ctx.WebhookSubscritptions.RemoveRange(matches);
             ctx.SaveChanges();
-            return true;
+            return this.Ok();
         }
     }
 }

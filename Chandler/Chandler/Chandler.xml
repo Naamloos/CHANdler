@@ -48,12 +48,13 @@
             </summary>
             <returns>Index Page</returns>
         </member>
-        <member name="M:Chandler.Controllers.PageController.Board(System.String,System.Int32)">
+        <member name="M:Chandler.Controllers.PageController.Board(System.String,System.Int32,Chandler.Data.Entities.ApiActionStatus)">
             <summary>
             Board page
             </summary>
             <param name="tag">Board Tag</param>
             <param name="p">Page to load</param>
+            <param name="status">Api Action status to return with view</param>
             <returns>Board page for the given board tag</returns>
         </member>
         <member name="M:Chandler.Controllers.PageController.Thread(System.Int32)">
@@ -86,7 +87,7 @@
             </summary>
             <returns>Webhook page</returns>
         </member>
-        <member name="M:Chandler.Controllers.PageController.CreatePostAndRedirect(System.String,System.String,System.Int32,System.String,System.String,System.String,System.String,System.Int64)">
+        <member name="M:Chandler.Controllers.PageController.Board(System.String,System.String,System.Int32,System.String,System.String,System.String,System.String,System.Int64)">
             <summary>
             Creates a new thread and returns to the board page
             </summary>
@@ -118,11 +119,13 @@
             <param name="threadid">Thread Id to listen to</param>
             <returns>Main Index Page</returns>
         </member>
-        <member name="M:Chandler.Controllers.PageController.FormUnsub(System.String)">
+        <member name="M:Chandler.Controllers.PageController.FormUnsub(System.String,System.String,System.Nullable{System.Int32})">
             <summary>
             Deletes a webhook link and returns to the base server address
             </summary>
             <param name="url">URL of the webhook</param>
+            <param name="boardtag">Tag of the board</param>
+            <param name="threadid">ID of the thread</param>
             <returns>Main Index Page</returns>
         </member>
         <member name="T:Chandler.Controllers.ServerController">
@@ -230,13 +233,16 @@
             <param name="boardtag">The tag of the board to listen to</param>
             <param name="threadid">The ID of the thread to listen to</param>
             <returns>WebhookSubscription Object</returns>
+            <response code="400">When no board tag or thread id has been sent, the url is empty, the url is in valid, the board/thread doesnt exist, or when the webhook has already been assigned to the board/thread</response>
         </member>
-        <member name="M:Chandler.Controllers.WebhooksController.UnSubscribeWebhook(System.String)">
+        <member name="M:Chandler.Controllers.WebhooksController.UnSubscribeWebhook(System.String,System.String,System.Nullable{System.Int32})">
             <summary>
             Ubsubscribes a webhook
             </summary>
             <param name="url">Webhook's URL</param>
-            <returns>True on success</returns>
+            <param name="boardtag">The tag of the board to unsub from</param>
+            <param name="threadid">The Id of the thread to unsub from</param>
+            <returns>200 OK on success</returns>
             <response code="400">When ID is invalid or password is incorrect</response>
         </member>
         <member name="T:Chandler.Data.Database">
@@ -294,6 +300,26 @@
             Overridden version of OnConfiguring
             </summary>
             <param name="optionsBuilder">DbContextOptionsBuilder</param>
+        </member>
+        <member name="T:Chandler.Data.Entities.ApiActionStatus">
+            <summary>
+            ApiActionError
+            </summary>
+        </member>
+        <member name="P:Chandler.Data.Entities.ApiActionStatus.Title">
+            <summary>
+            Title of the message
+            </summary>
+        </member>
+        <member name="P:Chandler.Data.Entities.ApiActionStatus.ResponseCode">
+            <summary>
+            Http response code
+            </summary>
+        </member>
+        <member name="P:Chandler.Data.Entities.ApiActionStatus.Message">
+            <summary>
+            The message
+            </summary>
         </member>
         <member name="T:Chandler.Data.Entities.Board">
             <summary>
@@ -550,6 +576,58 @@
             The ID of the thread to listen to
             </summary>
         </member>
+        <member name="T:Chandler.Data.Passworder">
+            <summary>
+            Static class for hashing passwords
+            </summary>
+        </member>
+        <member name="M:Chandler.Data.Passworder.GenerateHash(System.String,System.String)">
+            <summary>
+            Generate a hash
+            </summary>
+            <param name="input">Text Input</param>
+            <param name="pepper">Unique string known only to the server</param>
+            <returns>Generated Hash</returns>
+        </member>
+        <member name="M:Chandler.Data.Passworder.VerifyPassword(System.String,System.String,System.String,System.String)">
+            <summary>
+            Compares text input to the given hash
+            </summary>
+            <param name="input">Text Input</param>
+            <param name="salt">Hash Salt</param>
+            <param name="pepper">Unique string known only to the server</param>
+            <param name="hash">Hash to compare to</param>
+            <returns>True, if text matches hash</returns>
+        </member>
+        <member name="T:Chandler.Data.Webhooker">
+            <summary>
+            Webhook helper for sending posts to a webhook
+            </summary>
+        </member>
+        <member name="M:Chandler.Data.Webhooker.SendContentToAllAsync(Chandler.Data.DatabaseContext,Chandler.Data.Entities.Thread)">
+            <summary>
+            Posts the message to the discord webhook
+            </summary>
+            <param name="ctx">Database Context</param>
+            <param name="thread">The new thread being posted</param>
+            <returns></returns>
+        </member>
+        <member name="M:Chandler.Data.Webhooker.SendBodyAsync(Chandler.Data.Entities.WebhookSubscription,Chandler.Data.Entities.DiscordWebhookBody)">
+            <summary>
+            Posts the message to the discord webhook
+            </summary>
+            <param name="sub">The webhook subscription to use</param>
+            <param name="body">Full post body object</param>
+            <returns></returns>
+        </member>
+        <member name="M:Chandler.Data.Webhooker.SendEmbedAsync(Chandler.Data.Entities.WebhookSubscription,Chandler.Data.Entities.Embed)">
+            <summary>
+            Posts the embed and content to the discord webhook
+            </summary>
+            <param name="sub">The webhook subscription to use</param>
+            <param name="embed">The embed to post</param>
+            <returns></returns>
+        </member>
         <member name="T:Chandler.Data.ServerMeta">
             <summary>
             Server Meta
@@ -645,6 +723,11 @@
             Configuration for the server
             </summary>
         </member>
+        <member name="P:Chandler.Models.BoardPageModel.ActionStatus">
+            <summary>
+            Status of an Api action
+            </summary>
+        </member>
         <member name="T:Chandler.Models.DeletePageModel">
             <summary>
             Delete Page Model
@@ -683,6 +766,11 @@
         <member name="P:Chandler.Models.IndexPageModel.Config">
             <summary>
             Configuration for the server
+            </summary>
+        </member>
+        <member name="P:Chandler.Models.IndexPageModel.ActionStatus">
+            <summary>
+            The status of an api action
             </summary>
         </member>
         <member name="T:Chandler.Models.MetadataViewModel">
@@ -779,29 +867,6 @@
             <summary>
             Server config
             </summary>
-        </member>
-        <member name="T:Chandler.Passworder">
-            <summary>
-            Static class for hashing passwords
-            </summary>
-        </member>
-        <member name="M:Chandler.Passworder.GenerateHash(System.String,System.String)">
-            <summary>
-            Generate a hash
-            </summary>
-            <param name="input">Text Input</param>
-            <param name="pepper">Unique string known only to the server</param>
-            <returns>Generated Hash</returns>
-        </member>
-        <member name="M:Chandler.Passworder.VerifyPassword(System.String,System.String,System.String,System.String)">
-            <summary>
-            Compares text input to the given hash
-            </summary>
-            <param name="input">Text Input</param>
-            <param name="salt">Hash Salt</param>
-            <param name="pepper">Unique string known only to the server</param>
-            <param name="hash">Hash to compare to</param>
-            <returns>True, if text matches hash</returns>
         </member>
         <member name="T:Chandler.Program">
             <summary>

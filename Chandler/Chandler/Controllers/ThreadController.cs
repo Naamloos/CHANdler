@@ -18,9 +18,6 @@ namespace Chandler.Controllers
     [ApiController, Route("api/[controller]"), Produces("application/json")]
     public class ThreadController : Controller
     {
-        private delegate Task PostCreatedEvent(Thread thread, DiscordWebhookBody body);
-        private event PostCreatedEvent PostCreated;
-
         private readonly Database database;
         private readonly ServerConfig config;
         private readonly DatabaseContext ctx;
@@ -36,21 +33,6 @@ namespace Chandler.Controllers
             this.config = conf;
             this.ctx = this.database.GetContext();
             this.ctx.Database.EnsureCreated();
-            this.PostCreated += this.ThreadController_PostCreated;
-        }
-
-        private async Task ThreadController_PostCreated(Thread thread, DiscordWebhookBody body)
-        {
-            using var http = new HttpClient();
-            foreach (var sub in ctx.WebhookSubscritptions)
-            {
-                if (thread.BoardTag == sub.BoardTag || thread.ParentId == sub.ThreadId)
-                {
-                    var jsondata = JsonConvert.SerializeObject(body);
-                    var res = await http.PostAsync($"https://discordapp.com/api/webhooks/{sub.WebhookId}/{sub.Token}", new StringContent(jsondata, Encoding.UTF8, "application/json"));
-                    var cont = await res.Content.ReadAsStringAsync();
-                }
-            }
         }
 
         /// <summary>
@@ -125,10 +107,10 @@ namespace Chandler.Controllers
             newpost.Id = 0;
 
             if (string.IsNullOrEmpty(newpost.Text))
-                return BadRequest("Text too short");
+                return BadRequest("Text body is too short");
 
             if (newpost.IsCommentReply && newpost.ParentId == -1)
-                return BadRequest("Expected comment, got parent");
+                return BadRequest("Expected a comment, got a parent");
 
             if (string.IsNullOrEmpty(newpost.Username))
                 newpost.Username = "Anonymous";
@@ -148,39 +130,14 @@ namespace Chandler.Controllers
                 passid = newpass.Id;
             }
 
-            //var settings = new TextEncoderSettings();
-            //settings.AllowRange(UnicodeRanges.All);
-            //settings.ForbidCharacters(new[] { '<', '>' });
-            //var encoder = HtmlEncoder.Create(settings);
-
-            //newpost.Text = encoder.Encode(newpost.Text);
-            //if (newpost.Image != null) newpost.Image = encoder.Encode(newpost.Image);
-            //newpost.Username = encoder.Encode(newpost.Username);
-            //if (newpost.Topic != null) newpost.Topic = encoder.Encode(newpost.Topic);
-
             newpost.GeneratePassword = "";
             newpost.PasswordId = passid;
 
             await ctx.Threads.AddAsync(newpost);
             await ctx.SaveChangesAsync();
 
-            /*            var body = new DiscordWebhookBody()
-                        {
-                            Content = $"**{newpost.Username}** Posted:",
-                            Embed = new Embed()
-                            {
-                                Title = newpost.Topic,
-                                Description = newpost.Text,
-                                Url = new Uri($"{this.Request.Host}/posts?id={newpost.Id}")
-                            }
-                        };*/
-
-            var body = new DiscordWebhookBody()
-            {
-                Content = $"**{newpost.Username}** Posted:\n__{newpost.Topic}__\n{newpost.Text}"
-            };
-
-            await this.PostCreated.Invoke(newpost, body);
+            //Run in background
+            await Task.Run(async () => await Webhooker.SendContentToAllAsync(this.database.GetContext(), newpost));
 
             return newpost;
         }
