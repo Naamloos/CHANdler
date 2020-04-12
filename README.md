@@ -14,7 +14,7 @@ Alternate link for live docs is: https://chandler.naamloos.dev/docs
 ###Images
 Images can be self hosted and placed in `/res`
 
-###Configuration
+### Configuration
 The configuration file is set out like so:
 
 ```
@@ -49,7 +49,7 @@ The configuration file is set out like so:
 
 `defaultadmins` is an IEnumerable of DefaultAdmin and is used to add a default list of admins when starting up. See below for details on the object.
 
-####DefaultAdmin
+#### DefaultAdmin
 
 `Username` is the username for the Admin user.
 
