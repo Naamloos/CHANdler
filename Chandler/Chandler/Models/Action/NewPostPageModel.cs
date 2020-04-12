@@ -21,9 +21,14 @@
         public long ReplyToId { get; set; }
 
         /// <summary>
-        /// Is the post a reply?
+        /// Whether or not the post a reply to a main thread comment
         /// </summary>
         public bool IsCommentReply { get => (this.ReplyToId > -1); }
+
+        /// <summary>
+        /// Is the post a reply to the main thread
+        /// </summary>
+        public bool IsThreadReply { get; set; }
 
         /// <summary>
         /// Configuration for the server

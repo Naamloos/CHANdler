@@ -5,12 +5,33 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="description" content="Get a load of this guy - Best Open source board server software" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="stylesheet" type="text/css" href="~/css/main.css" />
+    <link rel="stylesheet" type="text/css" href="~/css/main.min.css" />
     <link href="https://fonts.googleapis.com/css?family=Tinos" rel="stylesheet">
     <link rel="icon" type="image/x-icon" href="/res/favicon.ico">
     @RenderSection("metadata")
 </head>
 <body>
+    @{
+        if (!this.User.Identity?.IsAuthenticated ?? false)
+        {
+            <div class="navbar">
+                <ul class="navbar-data">
+                    <li class="navbar-item"><a class="navbar-item-link" href="/Login">Login</a></li>
+                    <li class="navbar-item"><a class="navbar-item-link" href="/Register">Register</a></li>
+                </ul>
+            </div>
+        }
+        else
+        {
+
+            <div class="navbar">
+                <ul class="navbar-data">
+                    <li class="navbar-item"><p class="nav-pel">Logged in as: @this.User.Identity.Name</p></li>
+                    <li class="navbar-item"><a class="navbar-item-link" href="/account/Logout">Logout</a></li>
+                </ul>
+            </div>
+        }
+    }
     @RenderBody()
     <script type="text/javascript" src="~/js/linkify.js"></script>
 </body>

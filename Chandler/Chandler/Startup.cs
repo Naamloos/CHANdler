@@ -2,21 +2,26 @@
 
 using AspNetCoreRateLimit;
 using Chandler.Data;
+using Chandler.Data.Entities;
+using Microsoft.AspNetCore.Antiforgery;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.FileProviders;
+using Microsoft.OpenApi.Models;
 using Newtonsoft.Json;
+using System;
 using System.IO;
 using System.Linq;
-using Swashbuckle.AspNetCore.Swagger;
-using Microsoft.OpenApi.Models;
-using System;
 using System.Reflection;
-using Chandler.Data.Entities;
-using Microsoft.Extensions.FileProviders;
 
 namespace Chandler
 {
@@ -48,7 +53,7 @@ namespace Chandler
             if (!Directory.Exists(conffolderpath))
                 Directory.CreateDirectory(conffolderpath);
 
-            if (!File.Exists(conffilepath)) 
+            if (!File.Exists(conffilepath))
             {
                 File.Create(conffilepath).Close();
                 File.WriteAllText(conffilepath, JsonConvert.SerializeObject(new ServerConfig(), Formatting.Indented));
@@ -78,6 +83,7 @@ namespace Chandler
             #endregion
 
             #region General Chandler Stuff
+
             services.AddSwaggerGen(x =>
             {
                 x.SwaggerDoc("v1", new OpenApiInfo()
@@ -94,10 +100,6 @@ namespace Chandler
                 x.IncludeXmlComments($"{AppContext.BaseDirectory}/{Assembly.GetExecutingAssembly().GetName().Name}.xml");
             });
 
-            services.AddMvc(x => x.EnableEndpointRouting = false)
-                .SetCompatibilityVersion(CompatibilityVersion.Version_3_0)
-                .AddControllersAsServices();
-
             services.AddSingleton(_db);
             services.AddSingleton(_meta);
             services.AddSingleton(_config);
@@ -108,13 +110,12 @@ namespace Chandler
                 .AllowAnyHeader();
             }));
 
-            using var ctx = _db.GetContext();
-            ctx.Database.EnsureCreated();
+            this._db.Database.EnsureCreated();
 
-            if (ctx.Boards.Count() == 0)
+            if (this._db.Boards.Count() == 0)
             {
                 // insert debug thread data to database
-                ctx.Boards.Add(new Data.Entities.Board()
+                this._db.Boards.Add(new Data.Entities.Board()
                 {
                     Name = "CHANdler",
                     Tag = "c",
@@ -122,14 +123,14 @@ namespace Chandler
                     ImageUrl = "/res/logo.jpg"
                 });
 
-                ctx.Boards.Add(new Data.Entities.Board()
+                this._db.Boards.Add(new Data.Entities.Board()
                 {
                     Name = "Random",
                     Tag = "r",
                     Description = "Random shit",
                 });
 
-                ctx.Boards.Add(new Data.Entities.Board()
+                this._db.Boards.Add(new Data.Entities.Board()
                 {
                     Name = "Memes",
                     Tag = "m",
@@ -137,7 +138,7 @@ namespace Chandler
                     Description = "haha cool and good dank memes",
                 });
 
-                ctx.Boards.Add(new Board()
+                this._db.Boards.Add(new Board()
                 {
                     Name = "Meta",
                     Tag = "meta",
@@ -147,23 +148,66 @@ namespace Chandler
 
                 (var hash, var salt) = Passworder.GenerateHash(this._config.DefaultPassword, this._config.DefaultPassword);
 
-                ctx.Passwords.Add(new Password()
+                this._db.Passwords.Add(new Password()
                 {
                     Id = -1,
                     Hash = hash,
                     Salt = salt
                 });
 
-                ctx.SaveChanges();
+                this._db.SaveChanges();
             }
+
+            services.AddIdentity<ChandlerUser, IdentityRole>(x =>
+            {
+                x.Password.RequiredLength = 8;
+                x.Password.RequiredUniqueChars = 0;
+                x.Password.RequireDigit = false;
+                x.Password.RequireLowercase = false;
+                x.Password.RequireNonAlphanumeric = false;
+                x.Password.RequireUppercase = false;
+
+                x.User.RequireUniqueEmail = true;
+
+                x.Lockout.AllowedForNewUsers = true;
+                x.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+                x.Lockout.MaxFailedAccessAttempts = 5;
+
+                x.User.AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@_-+=?/!\\ ";
+            }).AddEntityFrameworkStores<Database>()
+            .AddDefaultTokenProviders()
+            .AddUserManager<UserManager<ChandlerUser>>()
+            .AddSignInManager<SignInManager<ChandlerUser>>();
+
+            services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme);
+
+            services.ConfigureApplicationCookie(x =>
+            {
+                x.LoginPath = "/login";
+                x.LogoutPath = "/logout";
+                x.AccessDeniedPath = "/";
+                x.ExpireTimeSpan = TimeSpan.FromDays(1);
+                x.SlidingExpiration = true;
+            });
+
+            services.AddAntiforgery(x =>
+            {
+                x.FormFieldName = "AntiForgeryToken";
+                x.HeaderName = "X-CRSF-TOKEN";
+            });
+
+            services.AddMvc(x => x.EnableEndpointRouting = false)
+                .SetCompatibilityVersion(CompatibilityVersion.Version_3_0)
+                .AddControllersAsServices();
             #endregion
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IAntiforgery antiforgery)
         {
             if (env.EnvironmentName == "Development") app.UseDeveloperExceptionPage();
 
+            app.UseAuthentication();
             app.UseIpRateLimiting();
 
             app.UseSwagger();
@@ -176,12 +220,21 @@ namespace Chandler
             app.UseCors("publicpolicy");
             app.UseStaticFiles();
 
-            app.UseFileServer(new FileServerOptions() 
-            { 
+            app.UseFileServer(new FileServerOptions()
+            {
                 FileProvider = new PhysicalFileProvider(resfolderpath),
                 RequestPath = "/res"
             });
 
+            //app.Use(req => ctx =>
+            //{
+            //    var tokens = antiforgery.GetAndStoreTokens(ctx);
+            //    ctx.Response.Cookies.Append("CRSF-TOKEN", tokens.RequestToken, new CookieOptions()
+            //    {
+            //        HttpOnly = false
+            //    });
+            //    return req(ctx);
+            //});
             //app.UseHttpsRedirection();
             app.UseMvc(routes =>
             {

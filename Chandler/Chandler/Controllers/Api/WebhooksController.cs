@@ -1,5 +1,6 @@
 ﻿using Chandler.Data;
 using Chandler.Data.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Linq;
@@ -11,7 +12,7 @@ namespace Chandler.Controllers
     /// <summary>
     /// Webhook controller
     /// </summary>
-    [ApiController, Route("api/[controller]"), Produces("application/json")]
+    [ApiController, Route("api/[controller]"), Produces("application/json"), AllowAnonymous]
     public class WebhooksController : Controller
     {
         const string WebhookRegex = @"(https:\/\/(?:canary\.|)discordapp\.com\/api\/webhooks\/([0-9]+)\/(.+))";
@@ -47,18 +48,16 @@ namespace Chandler.Controllers
         [HttpGet("subscribe")]
         public ActionResult<WebhookSubscription> SubscribeWebhook([FromQuery]string url, [FromQuery]string boardtag = null, [FromQuery]int? threadid = null)
         {
-            using var ctx = this.Database.GetContext();
-
             #region You've been bad, go away.
             if (boardtag == null && threadid == null) return this.BadRequest("No board tag or thread id has been provided");
             if (string.IsNullOrEmpty(url)) return this.BadRequest("The provided url was empty");
             if (!new Regex(WebhookRegex).IsMatch(url)) return this.BadRequest("The provided url was not a valid discord webhook url");
-            if (!ctx.Boards.Any(x => x.Tag == boardtag) && threadid == null) return this.BadRequest("The given board tag doesn't exist");
-            if (!ctx.Threads.Any(x => x.Id == threadid) && boardtag == null) return this.BadRequest("The given thread id doesn't exist");
+            if (!this.Database.Boards.Any(x => x.Tag == boardtag) && threadid == null) return this.BadRequest("The given board tag doesn't exist");
+            if (!this.Database.Threads.Any(x => x.Id == threadid) && boardtag == null) return this.BadRequest("The given thread id doesn't exist");
             #endregion
 
             (var whid, var whtoken) = ParseWebhook(url);
-            var wh = ctx.WebhookSubscritptions.FirstOrDefault(x => x.Token == whtoken && x.WebhookId == whid);
+            var wh = this.Database.WebhookSubscritptions.FirstOrDefault(x => x.Token == whtoken && x.WebhookId == whid);
             if (wh != null)
             {
                 if (wh.BoardTag != null && wh.BoardTag == boardtag)
@@ -76,8 +75,8 @@ namespace Chandler.Controllers
                 WebhookId = whid
             };
 
-            ctx.WebhookSubscritptions.Add(whs);
-            ctx.SaveChanges();
+            this.Database.WebhookSubscritptions.Add(whs);
+            this.Database.SaveChanges();
 
             return whs;
         }
@@ -98,13 +97,12 @@ namespace Chandler.Controllers
 
             (var whid, var whtoken) = ParseWebhook(url);
 
-            using var ctx = this.Database.GetContext();
-            if (!ctx.WebhookSubscritptions.Any(x => x.Token == whtoken && x.WebhookId == whid))
+            if (!this.Database.WebhookSubscritptions.Any(x => x.Token == whtoken && x.WebhookId == whid))
                 return this.BadRequest("The given url has not been added");
 
-            var matches = ctx.WebhookSubscritptions.Where(x => (x.Token == whtoken && x.WebhookId == whid) && (x.BoardTag == boardtag || x.ThreadId == threadid));
-            ctx.WebhookSubscritptions.RemoveRange(matches);
-            ctx.SaveChanges();
+            var matches = this.Database.WebhookSubscritptions.Where(x => (x.Token == whtoken && x.WebhookId == whid) && (x.BoardTag == boardtag || x.ThreadId == threadid));
+            this.Database.WebhookSubscritptions.RemoveRange(matches);
+            this.Database.SaveChanges();
             return this.Ok();
         }
     }

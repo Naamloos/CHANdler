@@ -1,5 +1,6 @@
 ﻿using Chandler.Data;
 using Chandler.Data.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using System.Collections.Generic;
@@ -15,12 +16,11 @@ namespace Chandler.Controllers
     /// <summary>
     /// Api Controller For Threads
     /// </summary>
-    [ApiController, Route("api/[controller]"), Produces("application/json")]
+    [ApiController, Route("api/[controller]"), Produces("application/json"), AllowAnonymous]
     public class ThreadController : Controller
     {
-        private readonly Database database;
-        private readonly ServerConfig config;
-        private readonly DatabaseContext ctx;
+        private readonly Database Database;
+        private readonly ServerConfig Config;
 
         /// <summary>
         /// Thread API Ctor
@@ -29,10 +29,8 @@ namespace Chandler.Controllers
         /// <param name="conf"></param>
         public ThreadController(Database database, ServerConfig conf)
         {
-            this.database = database;
-            this.config = conf;
-            this.ctx = this.database.GetContext();
-            this.ctx.Database.EnsureCreated();
+            this.Database = database;
+            this.Config = conf;
         }
 
         /// <summary>
@@ -45,7 +43,7 @@ namespace Chandler.Controllers
         [HttpGet, ProducesResponseType(200)]
         public ActionResult<IEnumerable<Thread>> GetThreads([FromQuery]string tag, [FromQuery]bool includechildren = false)
         {
-            var boardthreads = ctx.Threads.Where(x => x.BoardTag == tag && x.ParentId == -1);
+            var boardthreads = this.Database.Threads.Where(x => x.BoardTag == tag && x.ParentId == -1);
             if (boardthreads.Count() > 0)
             {
                 if (!includechildren) return boardthreads.OrderBy(x => x.Id).ToList();
@@ -69,13 +67,13 @@ namespace Chandler.Controllers
         [HttpGet("single"), ProducesResponseType(200)]
         public ActionResult<Thread> GetSingleThread([FromQuery]int id, [FromQuery]bool includechildren = false)
         {
-            var thread = ctx.Threads.FirstOrDefault(x => x.Id == id);
+            var thread = this.Database.Threads.FirstOrDefault(x => x.Id == id);
             if (thread != null)
             {
                 if (!includechildren) return thread;
                 else
                 {
-                    thread.ChildThreads = ctx.Threads.Where(x => x.ParentId == thread.Id);
+                    thread.ChildThreads = this.Database.Threads.Where(x => x.ParentId == thread.Id);
                     return thread;
                 }
             }
@@ -92,7 +90,7 @@ namespace Chandler.Controllers
         public ActionResult<IEnumerable<Thread>> GetPosts([FromQuery]int id)
         {
             if (id < 1) return BadRequest("ID must be valid");
-            else return this.ctx.Threads.Where(x => x.ParentId == id).OrderBy(x => x.Id).ToList();
+            else return this.Database.Threads.Where(x => x.ParentId == id).OrderBy(x => x.Id).ToList();
         }
 
         /// <summary>
@@ -119,25 +117,25 @@ namespace Chandler.Controllers
             int passid = -1;
             if (!string.IsNullOrWhiteSpace(passw))
             {
-                (var hash, var salt) = Passworder.GenerateHash(passw, this.config.DefaultPassword);
+                (var hash, var salt) = Passworder.GenerateHash(passw, this.Config.DefaultPassword);
                 var newpass = new Password()
                 {
                     Hash = hash,
                     Salt = salt
                 };
-                ctx.Passwords.Add(newpass);
-                ctx.SaveChanges();
+                this.Database.Passwords.Add(newpass);
+                this.Database.SaveChanges();
                 passid = newpass.Id;
             }
 
             newpost.GeneratePassword = "";
             newpost.PasswordId = passid;
 
-            await ctx.Threads.AddAsync(newpost);
-            await ctx.SaveChangesAsync();
+            await this.Database.Threads.AddAsync(newpost);
+            await this.Database.SaveChangesAsync();
 
             //Run in background
-            await Task.Run(async () => await Webhooker.SendContentToAllAsync(this.database.GetContext(), newpost));
+            await Task.Run(async () => await Webhooker.SendContentToAllAsync(this.Database, newpost));
 
             return newpost;
         }
@@ -152,29 +150,29 @@ namespace Chandler.Controllers
         [HttpDelete("delete"), ProducesResponseType(200)]
         public ActionResult<bool> DeletePost([FromQuery]int postid = -1, [FromQuery]string pass = "")
         {
-            var thread = ctx.Threads.FirstOrDefault(x => x.Id == postid);
+            var thread = this.Database.Threads.FirstOrDefault(x => x.Id == postid);
             if (thread != null)
             {
-                var passwd = ctx.Passwords.FirstOrDefault(x => x.Id == thread.PasswordId);
+                var passwd = this.Database.Passwords.FirstOrDefault(x => x.Id == thread.PasswordId);
                 if (passwd != null)
                 {
-                    var passcorrect = Passworder.VerifyPassword(pass, passwd.Hash, passwd.Salt, this.config.DefaultPassword);
+                    var passcorrect = Passworder.VerifyPassword(pass, passwd.Hash, passwd.Salt, this.Config.DefaultPassword);
                     if (passcorrect)
                     {
-                        ctx.Threads.Remove(thread);
-                        ctx.SaveChanges();
+                        this.Database.Threads.Remove(thread);
+                        this.Database.SaveChanges();
                         return Ok();
                     }
                 }
 
                 // failed, trying with master password
-                var mpasswd = ctx.Passwords.First(x => x.Id == -1);
-                var mpasscorrect = Passworder.VerifyPassword(pass, mpasswd.Hash, mpasswd.Salt, this.config.DefaultPassword);
+                var mpasswd = this.Database.Passwords.First(x => x.Id == -1);
+                var mpasscorrect = Passworder.VerifyPassword(pass, mpasswd.Hash, mpasswd.Salt, this.Config.DefaultPassword);
 
                 if (mpasscorrect)
                 {
-                    ctx.Threads.Remove(thread);
-                    ctx.SaveChanges();
+                    this.Database.Threads.Remove(thread);
+                    this.Database.SaveChanges();
                     return Ok();
                 }
 

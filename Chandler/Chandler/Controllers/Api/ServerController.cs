@@ -1,5 +1,6 @@
 ﻿using Chandler.Data;
 using Chandler.Data.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -10,11 +11,11 @@ namespace Chandler.Controllers
     /// <summary>
     /// Server object
     /// </summary>
-    [ApiController, Route("api/[controller]"), Produces("application/json")]
+    [ApiController, Route("api/[controller]"), Produces("application/json"), AllowAnonymous]
     public class ServerController : ControllerBase
     {
-        private readonly Database database;
-        private readonly ServerMeta meta;
+        private readonly Database Database;
+        private readonly ServerMeta Meta;
 
         /// <summary>
         /// Server Ctor
@@ -23,8 +24,8 @@ namespace Chandler.Controllers
         /// <param name="meta"></param>
         public ServerController(Database database, ServerMeta meta)
         {
-            this.database = database;
-            this.meta = meta;
+            this.Database = database;
+            this.Meta = meta;
         }
 
         /// <summary>
@@ -32,7 +33,7 @@ namespace Chandler.Controllers
         /// </summary>
         /// <returns>ServerMeta</returns>
         [HttpGet]
-        public ActionResult<ServerMeta> GetServerMeta() => this.meta;
+        public ActionResult<ServerMeta> GetServerMeta() => this.Meta;
 
         /// <summary>
         /// Returns the status of the server
@@ -48,8 +49,7 @@ namespace Chandler.Controllers
             this.Response.Headers.Add("Cache-Control", "max-age=3600");
 
             var notes = new List<string>();
-            using var ctx = this.database.GetContext();
-            var db = await ctx.Database.CanConnectAsync();
+            var db = await this.Database.Database.CanConnectAsync();
             var meta = GetServerMeta().Value;
             sh.Uptime = meta.UpTime;
             sh.DatabaseOk = db;

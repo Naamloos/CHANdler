@@ -1,5 +1,7 @@
 using Chandler.Data.Entities;
 using Newtonsoft.Json;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace Chandler
 {
@@ -33,15 +35,29 @@ namespace Chandler
         public string SiteLogo { get; private set; } = "/res/logo.jpg";
 
         /// <summary>
-        /// The default master password for deleting threads
+        /// The default master password for threads and admin user
         /// </summary>
         [JsonProperty("defaultpass")]
-        public string DefaultPassword { get; private set; } = "admin";
+        public string DefaultPassword { get; private set; } = "default_password";
 
         /// <summary>
-        /// Required for some metadata
+        /// Base url of the server the application is running on
         /// </summary>
         [JsonProperty("baseurl")]
-        public string BaseUrl { get; private set; } = "";
+        public string BaseUrl { get; private set; } = "http://localhost:2729";
+
+        /// <summary>
+        /// Default admin users for the server
+        /// </summary>
+        [JsonProperty("defaultadmins")]
+        public IEnumerable<DefaultAdmin> DefaultAdminUsers { get; private set; } = new[]
+        {
+            new DefaultAdmin()
+            {
+                Email = "Admin@Admin.com",
+                Username = "Admin",
+                Password = "default_password"
+            }
+        };
     }
 }

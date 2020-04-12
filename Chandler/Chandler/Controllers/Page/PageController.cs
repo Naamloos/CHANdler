@@ -1,13 +1,17 @@
 ﻿using Chandler.Data;
 using Chandler.Data.Entities;
 using Chandler.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -16,14 +20,16 @@ namespace Chandler.Controllers
     /// <summary>
     /// Page Controller
     /// </summary>
-    [ApiExplorerSettings(IgnoreApi = true)]
+    [ApiExplorerSettings(IgnoreApi = true), AllowAnonymous]
     public class PageController : Controller
     {
-        private readonly Database database;
-        private readonly ServerConfig config;
-        private readonly DatabaseContext ctx;
-        private readonly ThreadController threadcontroller;
-        private readonly WebhooksController webhookscontroller;
+        private readonly Database Database;
+        private readonly ServerConfig Config;
+        private readonly ThreadController ThreadController;
+        private readonly WebhooksController WebhooksController;
+
+        private const string INDEX_PAGE_PATH = "/Views/Main/Index.cshtml";
+        private const string BOARD_PAGE_PATH = "/Views/Main/Board.cshtml";
         private const int MAX_THREADS_ON_INDEX = 10;
 
         /// <summary>
@@ -35,12 +41,10 @@ namespace Chandler.Controllers
         /// <param name="webhookscontroller">API Webhook Controller</param>
         public PageController(Database db, ServerConfig config, ThreadController threadcontroller, WebhooksController webhookscontroller)
         {
-            this.database = db;
-            this.config = config;
-            this.ctx = this.database.GetContext();
-            this.ctx.Database.EnsureCreated();
-            this.threadcontroller = threadcontroller;
-            this.webhookscontroller = webhookscontroller;
+            this.Database = db;
+            this.Config = config;
+            this.ThreadController = threadcontroller;
+            this.WebhooksController = webhookscontroller;
         }
 
         /// <summary>
@@ -48,10 +52,10 @@ namespace Chandler.Controllers
         /// </summary>
         /// <returns>Index Page</returns>
         [HttpGet]
-        public IActionResult Index() => this.View(new IndexPageModel()
+        public IActionResult Index() => this.View(INDEX_PAGE_PATH, new IndexPageModel()
         {
-            Boards = ctx.Boards,
-            Config = this.config
+            Boards = this.Database.Boards,
+            Config = this.Config
         });
 
         /// <summary>
@@ -64,7 +68,7 @@ namespace Chandler.Controllers
         [Route("board/{tag}"), HttpGet]
         public IActionResult Board(string tag, [FromQuery]int p = 1, ApiActionStatus status = null)
         {
-            var threadcount = this.ctx.Threads.Where(x => x.BoardTag == tag && x.ParentId < 1).Count();
+            var threadcount = this.Database.Threads.Where(x => x.BoardTag == tag && x.ParentId < 1).Count();
 
             var pagecount = 1;
             // calculating page count
@@ -77,33 +81,33 @@ namespace Chandler.Controllers
             }
 
             // Get threads in order of last bumped.
-            var threads = this.ctx.Threads.Where(x => x.BoardTag == tag && x.ParentId < 1)
-                .OrderByDescending(x => this.ctx.Threads.Where(a => a.ParentId == x.Id || a.Id == x.Id).Select(b => b.Id).Max())
+            var threads = this.Database.Threads.Where(x => x.BoardTag == tag && x.ParentId < 1)
+                .OrderByDescending(x => this.Database.Threads.Where(a => a.ParentId == x.Id || a.Id == x.Id).Select(b => b.Id).Max())
                 .Skip(Math.Abs(p - 1) * MAX_THREADS_ON_INDEX)
                 .Take(MAX_THREADS_ON_INDEX)
                 .ToList();
 
             threads.ToList().ForEach(x =>
             {
-                x.ChildThreads = this.ctx.Threads.Where(a => a.ParentId == x.Id).OrderByDescending(a => a.Id).Take(5);
+                x.ChildThreads = this.Database.Threads.Where(a => a.ParentId == x.Id).OrderByDescending(a => a.Id).Take(5);
             });
 
             var bigOnes = new List<int>();
             foreach (var t in threads)
             {
-                if (this.ctx.Threads.Where(a => a.ParentId == t.Id).Count() > 5)
+                if (this.Database.Threads.Where(a => a.ParentId == t.Id).Count() > 5)
                     bigOnes.Add(t.Id);
             }
 
-            return this.View(new BoardPageModel()
+            return this.View(BOARD_PAGE_PATH, new BoardPageModel()
             {
-                BoardInfo = this.ctx.Boards.FirstOrDefault(x => x.Tag == tag),
+                BoardInfo = this.Database.Boards.FirstOrDefault(x => x.Tag == tag),
                 Threads = threads,
                 BigThreads = bigOnes,
                 PageCount = pagecount,
                 Currentpage = p,
                 MaxThreadsPerPage = MAX_THREADS_ON_INDEX,
-                Config = this.config,
+                Config = this.Config,
                 ActionStatus = status
             });
         }
@@ -116,15 +120,15 @@ namespace Chandler.Controllers
         [Route("thread/{id}"), HttpGet]
         public IActionResult Thread(int id)
         {
-            var thread = this.ctx.Threads.First(x => x.Id == id);
-            thread.ChildThreads = this.ctx.Threads.Where(a => a.ParentId == thread.Id).OrderBy(x => x.Id);
-            var board = this.ctx.Boards.First(x => x.Tag == thread.BoardTag);
+            var thread = this.Database.Threads.First(x => x.Id == id);
+            thread.ChildThreads = this.Database.Threads.Where(a => a.ParentId == thread.Id).OrderBy(x => x.Id);
+            var board = this.Database.Boards.First(x => x.Tag == thread.BoardTag);
 
-            return this.View(new ThreadPageModel()
+            return this.View("/Views/Main/Thread.cshtml", new ThreadPageModel()
             {
                 BoardInfo = board,
                 Thread = thread,
-                Config = this.config
+                Config = this.Config
             });
         }
 
@@ -134,15 +138,17 @@ namespace Chandler.Controllers
         /// <param name="board">board tag</param>
         /// <param name="parent_id">Id of the parent thread</param>
         /// <param name="replytoid">Id of the thread this post is replying to</param>
+        /// <param name="isthreadreply">Whether or not the post is a direct reply to the main thread</param>
         /// <returns>New thread page</returns>
         [Route("new"), HttpGet]
-        public IActionResult New([FromQuery]string board, [FromQuery]int parent_id, [FromQuery]long replytoid = -1) =>
-            this.View(new NewPostPageModel()
+        public IActionResult New([FromQuery]string board, [FromQuery]int parent_id, [FromQuery]long replytoid = -1, [FromQuery]bool isthreadreply = false) =>
+            this.View("/Views/Action/New.cshtml", new NewPostPageModel()
             {
                 BoardTag = board,
                 ParentId = parent_id,
                 ReplyToId = replytoid,
-                Config = this.config
+                Config = this.Config,
+                IsThreadReply = isthreadreply
             });
 
         /// <summary>
@@ -153,11 +159,11 @@ namespace Chandler.Controllers
         /// <returns>Board page</returns>
         [Route("delete"), HttpGet]
         public IActionResult Delete([FromQuery]string board_tag, [FromQuery]int id) =>
-            this.View(new DeletePageModel()
+            this.View("/Views/Action/Delete.cshtml", new DeletePageModel()
             {
                 BoardTag = board_tag,
                 PostId = id,
-                Config = this.config
+                Config = this.Config
             });
 
         /// <summary>
@@ -165,7 +171,7 @@ namespace Chandler.Controllers
         /// </summary>
         /// <returns>Webhook page</returns>
         [Route("Webhooks"), HttpGet]
-        public IActionResult Webhooks() => this.View(new WebhooksPageModel() { Config = this.config });
+        public IActionResult Webhooks() => this.View("/Views/Main/Webhooks.cshtml", new WebhooksPageModel() { Config = this.Config });
 
         /// <summary>
         /// Creates a new thread and returns to the board page
@@ -182,7 +188,7 @@ namespace Chandler.Controllers
         [Route("thread/create"), HttpGet]
         public async Task<IActionResult> Board([FromQuery]string boardtag, [FromQuery]string text, [FromQuery]int parent_id = -1, [FromQuery]string username = null, [FromQuery]string topic = null, [FromQuery]string password = null, [FromQuery]string imageurl = null, [FromQuery]long replytoid = -1)
         {
-            var response = await threadcontroller.CreatePost(new Thread()
+            var response = await this.ThreadController.CreatePost(new Thread()
             {
                 BoardTag = boardtag,
                 GeneratePassword = password,
@@ -200,7 +206,7 @@ namespace Chandler.Controllers
                 ResponseCode = (badres == null) ? 200 : 400,
                 Title = "Post"
             });
-            return this.View("Board", boardview.Model);
+            return this.View(BOARD_PAGE_PATH, boardview.Model);
         }
 
         /// <summary>
@@ -213,7 +219,7 @@ namespace Chandler.Controllers
         [Route("thread/deletepost"), HttpGet]
         public IActionResult DeletePostFromQuery([FromQuery]int postid, [FromQuery]string password, [FromQuery]string board_tag)
         {
-            var res = threadcontroller.DeletePost(postid, password);
+            var res = this.ThreadController.DeletePost(postid, password);
             var badres = res.Result as BadRequestObjectResult;
             var boardview = (ViewResult)this.Board(board_tag, status: new ApiActionStatus()
             {
@@ -221,7 +227,7 @@ namespace Chandler.Controllers
                 ResponseCode = (badres == null) ? 200 : 400,
                 Title = "Delete"
             });
-            return this.View("Board", boardview.Model);
+            return this.View(BOARD_PAGE_PATH, boardview.Model);
         }
 
         /// <summary>
@@ -234,9 +240,9 @@ namespace Chandler.Controllers
         [Route("webhooksub"), HttpGet]
         public IActionResult FormSub([FromQuery]string url, [FromQuery]string boardtag = null, [FromQuery]int? threadid = null)
         {
-            var res = webhookscontroller.SubscribeWebhook(url, boardtag, threadid);
+            var res = this.WebhooksController.SubscribeWebhook(url, boardtag, threadid);
             var badres = res.Result as BadRequestObjectResult;
-            return this.View("Index", new IndexPageModel()
+            return this.View(INDEX_PAGE_PATH, new IndexPageModel()
             {
                 ActionStatus = new ApiActionStatus()
                 {
@@ -244,8 +250,8 @@ namespace Chandler.Controllers
                     ResponseCode = (res.Result as OkObjectResult) == null ? 400 : 200,
                     Title = "Webhook"
                 },
-                Boards = this.ctx.Boards,
-                Config = this.config
+                Boards = this.Database.Boards,
+                Config = this.Config
             });
         }
 
@@ -259,9 +265,9 @@ namespace Chandler.Controllers
         [Route("webhookunsub"), HttpGet]
         public IActionResult FormUnsub([FromQuery]string url, [FromQuery]string boardtag = null, [FromQuery]int? threadid = null)
         {
-            var res = webhookscontroller.UnSubscribeWebhook(url, boardtag, threadid);
+            var res = this.WebhooksController.UnSubscribeWebhook(url, boardtag, threadid);
             var badres = res as BadRequestObjectResult;
-            return this.View("Index", new IndexPageModel()
+            return this.View(INDEX_PAGE_PATH, new IndexPageModel()
             {
                 ActionStatus = new ApiActionStatus()
                 {
@@ -269,8 +275,8 @@ namespace Chandler.Controllers
                     ResponseCode = (badres != null) ? 400 : 200,
                     Title = "Webhook"
                 },
-                Boards = this.ctx.Boards,
-                Config = this.config
+                Boards = this.Database.Boards,
+                Config = this.Config
             });
         }
     }

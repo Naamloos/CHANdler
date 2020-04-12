@@ -2,6 +2,7 @@
 <br>
 <div id="newpost">
     <form action="/thread/deletepost">
+        @Html.AntiForgeryToken()
         <input type="password" name="password" placeholder="Password...">
         <input type="hidden" name="postid" value="@Model.PostId">
         <input type="hidden" name="board_tag" value="@Model.BoardTag">

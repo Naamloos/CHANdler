@@ -23,6 +23,11 @@ namespace Chandler.Data.Entities
         /// <summary>
         /// Use an in memory datebase
         /// </summary>
-        InMemory = 2
+        InMemory = 2,
+
+        /// <summary>
+        /// Use an SqlServer
+        /// </summary>
+        SqlServer = 3
     }
 }

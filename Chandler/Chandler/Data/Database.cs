@@ -1,42 +1,80 @@
-﻿using System;
-using Chandler.Data.Entities;
+﻿using Chandler.Data.Entities;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
+using System;
 
 namespace Chandler.Data
 {
     /// <summary>
     /// Database Object
     /// </summary>
-    public class Database
+    public class Database : IdentityDbContext<ChandlerUser>
     {
+        /// <summary>
+        /// List of boards
+        /// </summary>
+        public DbSet<Board> Boards { get; set; }
+
+        /// <summary>
+        /// List of threads
+        /// </summary>
+        public DbSet<Thread> Threads { get; set; }
+
+        /// <summary>
+        /// List of passwords
+        /// </summary>
+        public DbSet<Password> Passwords { get; set; }
+
+        /// <summary>
+        /// List of webhook subscriptions
+        /// </summary>
+        public DbSet<WebhookSubscription> WebhookSubscritptions { get; set; }
+
         private string ConnectionString { get; }
+
         private DatabaseProvider Provider { get; }
 
         /// <summary>
-        /// Database Ctor
+        /// DatabaseContext Ctor
         /// </summary>
         /// <param name="provider">Database Provider</param>
-        /// <param name="cstr">Database Connection String</param>
-        public Database(DatabaseProvider provider, string cstr)
+        /// <param name="cstring">Database Connection String</param>
+        public Database(DatabaseProvider provider, string cstring)
         {
             this.Provider = provider;
-            this.ConnectionString = cstr;
+            this.ConnectionString = cstring;
         }
 
         /// <summary>
-        /// Get the current database context
+        /// Overridden version of OnConfiguring
         /// </summary>
-        /// <returns></returns>
-        public DatabaseContext GetContext()
+        /// <param name="optionsBuilder">DbContextOptionsBuilder</param>
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            try
+            if (optionsBuilder.IsConfigured) return;
+
+            optionsBuilder.EnableSensitiveDataLogging(true);
+
+            switch (this.Provider)
             {
-                return new DatabaseContext(this.Provider, this.ConnectionString);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("Error during database initialization:");
-                Console.WriteLine(e);
-                throw;
+                case DatabaseProvider.InMemory:
+                    optionsBuilder.UseInMemoryDatabase("chandler");
+                    break;
+
+                case DatabaseProvider.PostgreSql:
+                    optionsBuilder.UseNpgsql(this.ConnectionString);
+                    break;
+
+                case DatabaseProvider.Sqlite:
+                    optionsBuilder.UseSqlite(this.ConnectionString);
+                    break;
+
+                case DatabaseProvider.SqlServer:
+                    optionsBuilder.UseSqlServer(this.ConnectionString);
+                    break;
+
+                default: 
+                    throw new ArgumentException("DatabaseProvider is an invalid value. Valid values are: 0, 1, 2, and 3");
             }
         }
     }

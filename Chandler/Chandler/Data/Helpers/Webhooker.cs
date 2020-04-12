@@ -21,7 +21,7 @@ namespace Chandler.Data
         /// <param name="ctx">Database Context</param>
         /// <param name="thread">The new thread being posted</param>
         /// <returns></returns>
-        public static async Task SendContentToAllAsync(DatabaseContext ctx, Thread thread)
+        public static async Task SendContentToAllAsync(Database ctx, Thread thread)
         {
             var subs = ctx.WebhookSubscritptions.Where(x => x.BoardTag == thread.BoardTag || x.ThreadId == thread.ParentId);
             using var http = new HttpClient();

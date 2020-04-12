@@ -2,18 +2,21 @@
 <br>
 <div id="newpost">
     <form action="/thread/create">
+        @Html.AntiForgeryToken()
         <input type="text" name="username" placeholder="Anonymous">
-        @if (!Model.IsCommentReply)
-        {
-            <input type="text" name="topic" placeholder="(Optional) Topic...">
-        }
-        @if (Model.IsCommentReply)
-        {
-            <textarea name="text">>>@Model.ReplyToId</textarea>
-        }
-        else
-        {
-            <textarea name="text" placeholder="Your message..."></textarea>
+        @{
+            if (!Model.IsCommentReply && !Model.IsThreadReply)
+            {
+                <input type="text" name="topic" placeholder="(Optional) Topic...">
+            }
+            if (Model.IsCommentReply)
+            {
+                <textarea name="text">>>@Model.ReplyToId</textarea>
+            }
+            else
+            {
+                <textarea name="text" placeholder="Your message..."></textarea>
+            }
         }
         <input type="text" name="imageurl" placeholder="(Optional) Image Url" inputmode="url">
         <input type="password" name="password" placeholder="(Optional) Post password">

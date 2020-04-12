@@ -1,0 +1,33 @@
+﻿@model LoginPageModel
+<!--TEMP PLACEHOLDER PAGE-->
+
+<div id="addwh">
+    <h1 class="whhone">Register</h1>
+    <div id="newpost" class="whdiv">
+        <form id="whsubform" method="post" action="/account/register" style="overflow:auto;">
+            @Html.AntiForgeryToken()
+            <input class="whinp" type="text" name="Username" placeholder="Username">
+            <input class="whinp" type="text" name="Email" placeholder="Email">
+            <input oncopy="return false" oncut="return false" class="whinp" type="password" name="Password" placeholder="Password" />
+            <input type="submit" />
+        </form>
+        <br>
+    </div>
+    <br />
+    <br />
+    <a href="/" style="margin-left:47%;">Back to Home</a>
+</div>
+
+@* This part defines the metadata stuff. *@
+@section metadata
+{
+    @Html.Partial("_Metadata", new MetadataViewModel()
+    {
+        Title = $"{Model.Config.SiteName} - Register",
+        Config = Model.Config,
+        Description = $"Login page for {Model.Config.SiteName}",
+        Image = Model.Config.SiteLogo,
+        ImageRelative = true,
+        RelativeUrl = Url.RouteUrl(ViewContext.RouteData.Values)
+    })
+}

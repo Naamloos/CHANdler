@@ -3,6 +3,8 @@
     --body-colour: #151515;
     --border-colour: #585858;
     --secondary-bg-colour: #262626;
+    --hov-colour: #536253;
+    --link-colour: #BA0000;
 }
 
 * {
@@ -18,7 +20,7 @@ body {
 }
 
 a {
-    color: #BA0000;
+    color: var(--link-colour);
 }
 
 #boardmeta {
@@ -159,11 +161,6 @@ option {
     padding-top: 2%;
 }
 
-.whinp {
-    /*background-color: var(--secondary-bg-colour);
-    color: var(--text-colour);*/
-}
-
 .alert {
     padding: 20px;
     background-color: var(--secondary-bg-colour);
@@ -196,4 +193,43 @@ option {
 
 .closebtn:hover {
     color: black;
+}
+
+.nav-container {
+    border: 5px solid var(--border-colour);
+    border-radius: 3px;
+}
+
+.navbar-data {
+    list-style-type: none;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+}
+
+.navbar-item {
+    display: inline;
+    float: left;
+    padding: 0px 2% 0px 2%;
+}
+
+.navbar-item a.navbar-item-link:hover {
+    background-color: var(--link-colour);
+}
+
+.navbar-item-link {
+    color: white;
+    text-decoration: none;
+    display: block;
+    padding: 8px;
+    text-align: center;
+    padding: 14px 16px;
+}
+
+.nav-pel {
+    color: white;
+    display: block;
+    padding: 8px;
+    text-align: center;
+    padding: 14px 16px;
 }

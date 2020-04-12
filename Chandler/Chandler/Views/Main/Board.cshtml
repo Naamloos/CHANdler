@@ -75,7 +75,7 @@
 
                         <p class="_linkify">@mainthread.Text</p>
                         <p>
-                            <i><a href="/new?board=@Model.BoardInfo.Tag&parent_id=@mainthread.Id">Reply</a></i>
+                            <i><a href="/new?board=@Model.BoardInfo.Tag&parent_id=@mainthread.Id&isthreadreply=true">Reply</a></i>
                             <i><a href="/delete?id=@mainthread.Id&board_tag=@Model.BoardInfo.Tag">Delete</a></i>
                             <i><a href="/thread/@mainthread.Id">View Full Thread</a></i>
                             <br />
@@ -95,7 +95,7 @@
                         <div class="commenttext">
                             <p class="_linkify">@comment.Text</p>
                             <p>
-                                <i><a href="/new?board=@Model.BoardInfo.Tag&parent_id=@mainthread.Id&replytoid=@comment.Id">Reply</a></i>
+                                <i><a href="/new?board=@Model.BoardInfo.Tag&parent_id=@mainthread.Id&replytoid=@comment.Id&isthreadreply=false">Reply</a></i>
                                 <i><a href="/delete?id=@comment.Id&board_tag=@Model.BoardInfo.Tag">Delete</a></i>
                             </p>
                         </div>
