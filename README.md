@@ -11,7 +11,7 @@ A live version of the docs can be found at: https://chandler.li223.dev/docs
 Alternate link for live docs is: https://chandler.naamloos.dev/docs
 
 ## Setup
-###Images
+### Images
 Images can be self hosted and placed in `/res`
 
 ### Configuration
