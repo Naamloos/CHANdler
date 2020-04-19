@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-namespace Chandler.Models
+﻿namespace Chandler.Models
 {
     /// <summary>
     /// This model gets used in the partial view for metadata

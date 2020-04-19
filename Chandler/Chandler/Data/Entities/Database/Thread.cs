@@ -25,6 +25,12 @@ namespace Chandler.Data.Entities
         public int ParentId { get; set; } = -1;
 
         /// <summary>
+        /// The ID of the user who posted the thread ('-1' if the thread was posted anonymously)
+        /// </summary>
+        [Column("userid")]
+        public string UserId { get; set; } = "-1";
+
+        /// <summary>
         /// The tag for the board this post belongs to
         /// </summary>
         [Column("boardtag")]

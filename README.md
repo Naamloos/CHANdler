@@ -11,7 +11,7 @@ A live version of the docs can be found at: https://chandler.li223.dev/docs
 Alternate link for live docs is: https://chandler.naamloos.dev/docs
 
 ## Setup
-###Images
+### Images
 Images can be self hosted and placed in `/res`
 
 ### Configuration
@@ -21,23 +21,38 @@ The configuration file is set out like so:
 {
   "dbprovider": int,
   "dbstring": string,
-  "sitename": string,
-  "sitelogo": string,
-  "defaultpass": string,
-  "baseurl": string,
-  "defaultadmins": [
-    {
-      "username": string,
-      "email": string,
-      "password":  string
-    }
-  ]
+  "site": {
+    "sitename": string,
+    "sitefav": string,
+    "sitelogo": string,
+    "adminusername": string,
+    "adminemail": string,
+    "defaultpass": string,
+    "baseurl": string
+  },
+  "discordoauth": {
+    "clientid": string,
+    "clientsecret": string,
+    "redirecturi": string
+  }
 }
 ```
 
 `dbprovider` is an enum value where 0 = PostgreSQL, 1 = Sqlite, and 2 = InMemory.
 
 `dbstring` is the connection string to be used when connecting to an engine other than InMemory.
+
+#### Site
+
+`sitefav` is the path to your site's Favicon.
+
+`sitelogo` is the path to your site's logo.
+
+`adminusername` is the Username of the initial Admin User.
+ 
+`adminemail` is the Email of the initial Admin User.
+
+`adminpassword` is the Password of the initial Admin User.
 
 `sitename` is the name of your site.
 
@@ -47,15 +62,13 @@ The configuration file is set out like so:
 
 `baseurl` is the base url of the application.
 
-`defaultadmins` is an IEnumerable of DefaultAdmin and is used to add a default list of admins when starting up. See below for details on the object.
+#### DiscordOAuth
 
-#### DefaultAdmin
+`clientid` is the Application Id.
 
-`Username` is the username for the Admin user.
+`clientsecret` is the Application Secret.
 
-`Email` is the email for the Admin user.
-
-`Password` is the password for the Admin user. Make sure that it is longer than 8 characters.
+`redirecturi` is the URI to redirect to after signning in.
 
 ## Cool stuff with CHANdler
 [ChandlerSharpPlus](https://github.com/li223/ChandlerSharpPlus) by [Li223](https://github.com/li223)

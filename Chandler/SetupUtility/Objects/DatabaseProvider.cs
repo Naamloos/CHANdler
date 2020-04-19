@@ -1,4 +1,4 @@
-﻿namespace Chandler.Data.Entities
+﻿namespace SetupUtility.Entities
 {
     /// <summary>
     /// Database Provider Enum

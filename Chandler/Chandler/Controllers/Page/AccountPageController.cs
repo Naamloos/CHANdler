@@ -1,13 +1,10 @@
 ﻿using Chandler.Data;
 using Chandler.Data.Entities;
 using Chandler.Models;
-using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using Microsoft.AspNetCore.Routing;
 using System.Threading.Tasks;
 
 namespace Chandler.Controllers
@@ -37,11 +34,18 @@ namespace Chandler.Controllers
         }
 
         /// <summary>
+        /// Login using discord
+        /// </summary>
+        /// <returns>Discord Challenge</returns>
+        [Route("login/discord")]
+        public IActionResult LoginWithDiscord() => this.Challenge(new AuthenticationProperties() { RedirectUri = this.Config.DiscordOAuthSettings.RedirectUri }, "Discord");
+
+        /// <summary>
         /// Returns login page
         /// </summary>
         /// <returns>Login Page View</returns>
         [Route("login"), HttpGet, AllowAnonymous]
-        public IActionResult Login() => this.View("/Views/Action/Login.cshtml", new LoginPageModel() { Config = this.Config });
+        public IActionResult Login() => this.View("/Views/Action/Login.cshtml", this.Config);
 
         /// <summary>
         /// Login via form
@@ -80,7 +84,7 @@ namespace Chandler.Controllers
         /// </summary>
         /// <returns>Returns register page</returns>
         [Route("register"), HttpGet, AllowAnonymous]
-        public IActionResult Register() => this.View("/Views/Action/Register.cshtml", new LoginPageModel() { Config = this.Config });
+        public IActionResult Register() => this.View("/Views/Action/Register.cshtml", this.Config);
 
         /// <summary>
         /// Register via form
@@ -129,6 +133,45 @@ namespace Chandler.Controllers
         {
             await this.AccountController.LogoutAsync();
             return this.LocalRedirect("/");
+        }
+
+        /// <summary>
+        /// Delete account page
+        /// </summary>
+        /// <returns>DeleteAccount Page</returns>
+        [Route("userdelete"), HttpGet, Authorize]
+        public IActionResult Delete() => this.View("/Views/Action/DeleteAccount.cshtml", this.Config);
+
+        /// <summary>
+        /// Deletes account
+        /// </summary>
+        /// <param name="UsernameOrEmail">Username or Email of the user</param>
+        /// <param name="Password">Password of the user</param>
+        /// <returns>IndexPage</returns>
+        [Route("account/delete"), HttpPost, Authorize, ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteFromPost([FromForm]string UsernameOrEmail, [FromForm]string Password)
+        {
+            var res = await this.AccountController.DeleteAccountAsync(this.User, new AccountDetailsBody()
+            {
+                Email = UsernameOrEmail,
+                Username = UsernameOrEmail,
+                Password = Password
+            });
+
+            if (res is BadRequestObjectResult badreq)
+                return this.View(INDEX_PAGE_PATH, new IndexPageModel()
+                {
+                    ActionStatus = new ApiActionStatus()
+                    {
+                        Message = badreq.Value.ToString(),
+                        ResponseCode = 500,
+                        Title = "Delete Account"
+                    },
+                    Boards = this.Database.Boards,
+                    Config = this.Config
+                });
+
+            else return this.LocalRedirect("/");
         }
     }
 }

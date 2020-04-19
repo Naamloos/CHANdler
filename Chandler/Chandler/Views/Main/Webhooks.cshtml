@@ -1,23 +1,23 @@
 ﻿@model WebhooksPageModel
 
 <div id="addwh">
-    <h1 class="whhone">Add Webhook</h1>
-    <div id="newpost" class="whdiv">
-        <form id="whsubform" action="/webhooksub" style="overflow:auto;">
-            <input class="whinp" type="text" name="url" placeholder="Webhook URL">
-            <input class="whinp" type="text" name="boardtag" placeholder="Tag of the board to subscribe to" />
-            <input class="whinp" type="text" name="threadid" placeholder="ID of the thread to subscribe to" />
+    <h1 class="phhone">Add Webhook</h1>
+    <div id="newpost" class="phdiv">
+        <form id="phform" action="/webhooksub" style="overflow:auto;">
+            <input class="phinp" type="text" name="url" placeholder="Webhook URL">
+            <input class="phinp" type="text" name="boardtag" placeholder="Tag of the board to subscribe to" />
+            <input class="phinp" type="text" name="threadid" placeholder="ID of the thread to subscribe to" />
             <input type="submit" />
         </form>
         <br>
     </div>
     <br />
-    <h1 class="whhone">Remove Webhook</h1>
-    <div id="newpost" class="whdiv">
-        <form id="whsubform" action="/webhookunsub" style="overflow:auto;">
-            <input class="whinp" type="text" name="url" placeholder="Webhook URL">
-            <input class="whinp" type="text" name="boardtag" placeholder="Tag of the board to unsubscribe from" />
-            <input class="whinp" type="text" name="threadid" placeholder="ID of the thread to unsubscribe from" />
+    <h1 class="phhone">Remove Webhook</h1>
+    <div id="newpost" class="phdiv">
+        <form id="phform" action="/webhookunsub" style="overflow:auto;">
+            <input class="phinp" type="text" name="url" placeholder="Webhook URL">
+            <input class="phinp" type="text" name="boardtag" placeholder="Tag of the board to unsubscribe from" />
+            <input class="phinp" type="text" name="threadid" placeholder="ID of the thread to unsubscribe from" />
             <input type="submit" />
         </form>
         <br>
@@ -30,12 +30,12 @@
 @* This part defines the metadata stuff. *@
 @section metadata
 {
-    @Html.Partial("_Metadata", new MetadataViewModel()
+    @await Html.PartialAsync("_Metadata", new MetadataViewModel()
     {
-        Title = $"{Model.Config.SiteName} - Discord Webhooks",
+        Title = $"{Model.Config.SiteConfig.SiteName} - Discord Webhooks",
         Config = Model.Config,
-        Description = $"Configure Discord webhooks for {Model.Config.SiteName}",
-        Image = Model.Config.SiteLogo,
+        Description = $"Configure Discord webhooks for {Model.Config.SiteConfig.SiteName}",
+        Image = Model.Config.SiteConfig.SiteLogo,
         ImageRelative = true,
         RelativeUrl = Url.RouteUrl(ViewContext.RouteData.Values)
     })

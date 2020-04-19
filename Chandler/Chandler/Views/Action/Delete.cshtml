@@ -15,12 +15,12 @@
 @* This part defines the metadata stuff. *@
 @section metadata
 {
-    @Html.Partial("_Metadata", new MetadataViewModel()
+    @await Html.PartialAsync("_Metadata", new MetadataViewModel()
     {
-        Title = $"{Model.Config.SiteName} - Delete post",
+        Title = $"{Model.Config.SiteConfig.SiteName} - Delete post",
         Config = Model.Config,
         Description = "Delete a post",
-        Image = Model.Config.SiteLogo,
+        Image = Model.Config.SiteConfig.SiteLogo,
         ImageRelative = true,
         RelativeUrl = Url.RouteUrl(ViewContext.RouteData.Values)
     })

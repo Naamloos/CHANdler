@@ -1,27 +1,27 @@
 ﻿#pragma warning disable CS1591
 
+using AspNet.Security.OAuth.Discord;
 using AspNetCoreRateLimit;
 using Chandler.Data;
 using Chandler.Data.Entities;
-using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.OpenApi.Models;
 using Newtonsoft.Json;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace Chandler
 {
@@ -36,27 +36,23 @@ namespace Chandler
 
         public Startup(IConfiguration configuration)
         {
-
             Configuration = configuration;
+            var Currentdir = Directory.GetCurrentDirectory();
+            resfolderpath = Path.Combine(Currentdir, "res");
+            var conffolderpath = Path.Combine(Currentdir, "config");
+            var conffilepath = Path.Combine(Currentdir, "config", "config.json");
 
-            var currentdir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            Directory.SetCurrentDirectory(currentdir);
-
-            resfolderpath = Path.Combine(currentdir, "res");
-            var conffolderpath = Path.Combine(currentdir, "config");
-            var conffilepath = Path.Combine(currentdir, "config/config.json");
-
-            // Ensure directories exist
-            if (!Directory.Exists(resfolderpath))
-                Directory.CreateDirectory(resfolderpath);
-
-            if (!Directory.Exists(conffolderpath))
-                Directory.CreateDirectory(conffolderpath);
+            //Make sure we have the folders we need even if -setup wasnt specified
+            if (!Directory.Exists(conffolderpath)) Directory.CreateDirectory(conffolderpath);
+            if (!Directory.Exists(resfolderpath)) Directory.CreateDirectory(resfolderpath);
 
             if (!File.Exists(conffilepath))
             {
-                File.Create(conffilepath).Close();
-                File.WriteAllText(conffilepath, JsonConvert.SerializeObject(new ServerConfig(), Formatting.Indented));
+                var buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new ServerConfig(), Formatting.Indented));
+                var fs = File.Create(conffilepath);
+                fs.WriteAsync(buffer, 0, buffer.Length).GetAwaiter().GetResult();
+                fs.DisposeAsync().GetAwaiter().GetResult();
+                Trace.WriteLine("A new configuration file was created. To customise, please either edit the newly created file or run the Setup Utility");
             }
 
             _config = JsonConvert.DeserializeObject<ServerConfig>(File.ReadAllText(conffilepath));
@@ -115,7 +111,7 @@ namespace Chandler
             if (this._db.Boards.Count() == 0)
             {
                 // insert debug thread data to database
-                this._db.Boards.Add(new Data.Entities.Board()
+                this._db.Boards.Add(new Board()
                 {
                     Name = "CHANdler",
                     Tag = "c",
@@ -123,14 +119,14 @@ namespace Chandler
                     ImageUrl = "/res/logo.jpg"
                 });
 
-                this._db.Boards.Add(new Data.Entities.Board()
+                this._db.Boards.Add(new Board()
                 {
                     Name = "Random",
                     Tag = "r",
                     Description = "Random shit",
                 });
 
-                this._db.Boards.Add(new Data.Entities.Board()
+                this._db.Boards.Add(new Board()
                 {
                     Name = "Memes",
                     Tag = "m",
@@ -146,7 +142,7 @@ namespace Chandler
                     Description = "About CHANdler itself, e.g. development talk.",
                 });
 
-                (var hash, var salt) = Passworder.GenerateHash(this._config.DefaultPassword, this._config.DefaultPassword);
+                (var hash, var salt) = Passworder.GenerateHash(this._config.SiteConfig.DefaultPassword, this._config.SiteConfig.DefaultPassword);
 
                 this._db.Passwords.Add(new Password()
                 {
@@ -157,6 +153,8 @@ namespace Chandler
 
                 this._db.SaveChanges();
             }
+
+            #region Auth and Forgery
 
             services.AddIdentity<ChandlerUser, IdentityRole>(x =>
             {
@@ -179,7 +177,30 @@ namespace Chandler
             .AddUserManager<UserManager<ChandlerUser>>()
             .AddSignInManager<SignInManager<ChandlerUser>>();
 
-            services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme);
+            if (this._config.DiscordOAuthSettings != null)
+            {
+                var clientid = this._config.DiscordOAuthSettings.ClientId.ToString();
+                var clientsecret = this._config.DiscordOAuthSettings.ClientSecret;
+                using var crng = new RNGCryptoServiceProvider();
+                var arr = new byte[15];
+                crng.GetBytes(arr);
+                var nonce = Convert.ToBase64String(arr);
+
+                services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+                    .AddDiscord(x =>
+                    {
+                        x.SignInScheme = "Identity.External";
+                        x.ClaimsIssuer = DiscordAuthenticationDefaults.Issuer;
+                        x.ReturnUrlParameter = "/";
+                        x.AccessDeniedPath = "/";
+                        x.ClientId = clientid;
+                        x.ClientSecret = clientsecret;
+                        x.TokenEndpoint = DiscordAuthenticationDefaults.TokenEndpoint;
+                        x.AuthorizationEndpoint = $"{DiscordAuthenticationDefaults.AuthorizationEndpoint}?response_type=code&client_id={clientid}&scope=identify&state={nonce}&redirect_uri={this._config.DiscordOAuthSettings.RedirectUri}";
+                        x.UserInformationEndpoint = DiscordAuthenticationDefaults.UserInformationEndpoint;
+                    });
+            }
+            else services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme);
 
             services.ConfigureApplicationCookie(x =>
             {
@@ -196,14 +217,17 @@ namespace Chandler
                 x.HeaderName = "X-CRSF-TOKEN";
             });
 
+            #endregion
+
             services.AddMvc(x => x.EnableEndpointRouting = false)
                 .SetCompatibilityVersion(CompatibilityVersion.Version_3_0)
                 .AddControllersAsServices();
+
             #endregion
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IAntiforgery antiforgery)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.EnvironmentName == "Development") app.UseDeveloperExceptionPage();
 
@@ -226,16 +250,6 @@ namespace Chandler
                 RequestPath = "/res"
             });
 
-            //app.Use(req => ctx =>
-            //{
-            //    var tokens = antiforgery.GetAndStoreTokens(ctx);
-            //    ctx.Response.Cookies.Append("CRSF-TOKEN", tokens.RequestToken, new CookieOptions()
-            //    {
-            //        HttpOnly = false
-            //    });
-            //    return req(ctx);
-            //});
-            //app.UseHttpsRedirection();
             app.UseMvc(routes =>
             {
                 routes.MapRoute(

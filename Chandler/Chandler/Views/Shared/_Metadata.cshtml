@@ -2,8 +2,8 @@
 @* All metadata.  *@
 
 @{ 
-    var baseurl = new Uri(Model.Config.BaseUrl);
-    var imglink = new Uri(Model.Config.BaseUrl);
+    var baseurl = new Uri(Model.Config.SiteConfig.BaseUrl);
+    var imglink = new Uri(Model.Config.SiteConfig.BaseUrl);
 
     if(Model.ImageRelative)
     {
@@ -26,4 +26,4 @@
 <meta property="og:description" content="@Model.Description" />
 
 <meta name="twitter:card" content="summary" />
-<meta property="og:site_name" content="@Model.Config.SiteName">
+<meta property="og:site_name" content="@Model.Config.SiteConfig.SiteName">

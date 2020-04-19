@@ -1,14 +1,14 @@
-﻿@model LoginPageModel
+﻿@model Chandler.ServerConfig
 <!--TEMP PLACEHOLDER PAGE-->
 
 <div id="addwh">
-    <h1 class="whhone">Register</h1>
-    <div id="newpost" class="whdiv">
-        <form id="whsubform" method="post" action="/account/register" style="overflow:auto;">
+    <h1 class="phhone">Register</h1>
+    <div id="newpost" class="phdiv">
+        <form id="phform" method="post" action="/account/register" style="overflow:auto;">
             @Html.AntiForgeryToken()
-            <input class="whinp" type="text" name="Username" placeholder="Username">
-            <input class="whinp" type="text" name="Email" placeholder="Email">
-            <input oncopy="return false" oncut="return false" class="whinp" type="password" name="Password" placeholder="Password" />
+            <input class="phinp" type="text" name="Username" placeholder="Username">
+            <input class="phinp" type="text" name="Email" placeholder="Email">
+            <input oncopy="return false" oncut="return false" class="phinp" type="password" name="Password" placeholder="Password" />
             <input type="submit" />
         </form>
         <br>
@@ -21,12 +21,12 @@
 @* This part defines the metadata stuff. *@
 @section metadata
 {
-    @Html.Partial("_Metadata", new MetadataViewModel()
+    @await Html.PartialAsync("_Metadata", new MetadataViewModel()
     {
-        Title = $"{Model.Config.SiteName} - Register",
-        Config = Model.Config,
-        Description = $"Login page for {Model.Config.SiteName}",
-        Image = Model.Config.SiteLogo,
+        Title = $"{Model.SiteConfig.SiteName} - Register",
+        Config = Model,
+        Description = $"Login page for {Model.SiteConfig.SiteName}",
+        Image = Model.SiteConfig.SiteLogo,
         ImageRelative = true,
         RelativeUrl = Url.RouteUrl(ViewContext.RouteData.Values)
     })

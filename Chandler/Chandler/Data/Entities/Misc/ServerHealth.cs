@@ -1,6 +1,5 @@
-﻿using Newtonsoft.Json;
-using System;
-using System.Text.Json.Serialization;
+﻿using System;
+using Newtonsoft.Json;
 
 namespace Chandler.Data.Entities
 {

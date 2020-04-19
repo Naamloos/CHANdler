@@ -1,5 +1,4 @@
 ﻿using Chandler.Data.Entities;
-using System.Collections.Generic;
 
 namespace Chandler.Models
 {

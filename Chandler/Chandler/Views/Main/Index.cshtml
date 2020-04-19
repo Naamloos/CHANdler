@@ -11,8 +11,8 @@
 }
 
 <div id="home">
-    <img id="sitelogo" src="@Model.Config.SiteLogo">
-    <h1 id="sitename">@Model.Config.SiteName</h1>
+    <img id="sitelogo" src="@Model.Config.SiteConfig.SiteLogo">
+    <h1 id="sitename">@Model.Config.SiteConfig.SiteName</h1>
     <h2>Boards:</h2>
     <div id="boardlist">
         @foreach (var board in Model.Boards)
@@ -34,12 +34,12 @@
 @* This part defines the metadata stuff. *@
 @section metadata
 {
-    @Html.Partial("_Metadata", new MetadataViewModel()
+    @await Html.PartialAsync("_Metadata", new MetadataViewModel()
     {
-        Title = $"{Model.Config.SiteName} - Home",
+        Title = $"{Model.Config.SiteConfig.SiteName} - Home",
         Config = Model.Config,
         Description = "",
-        Image = Model.Config.SiteLogo,
+        Image = Model.Config.SiteConfig.SiteLogo,
         ImageRelative = true,
         RelativeUrl = Url.RouteUrl(ViewContext.RouteData.Values)
     })

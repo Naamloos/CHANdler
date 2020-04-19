@@ -73,7 +73,7 @@ namespace Chandler.Data
                     optionsBuilder.UseSqlServer(this.ConnectionString);
                     break;
 
-                default: 
+                default:
                     throw new ArgumentException("DatabaseProvider is an invalid value. Valid values are: 0, 1, 2, and 3");
             }
         }

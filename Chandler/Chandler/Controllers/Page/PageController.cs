@@ -1,18 +1,15 @@
 ﻿using Chandler.Data;
 using Chandler.Data.Entities;
 using Chandler.Models;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http;
-using System.Reflection.Metadata.Ecma335;
-using System.Text;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace Chandler.Controllers
@@ -27,6 +24,8 @@ namespace Chandler.Controllers
         private readonly ServerConfig Config;
         private readonly ThreadController ThreadController;
         private readonly WebhooksController WebhooksController;
+        private readonly UserManager<ChandlerUser> UserManager;
+        private readonly SignInManager<ChandlerUser> SignInManager;
 
         private const string INDEX_PAGE_PATH = "/Views/Main/Index.cshtml";
         private const string BOARD_PAGE_PATH = "/Views/Main/Board.cshtml";
@@ -39,12 +38,16 @@ namespace Chandler.Controllers
         /// <param name="config">Server Configuration</param>
         /// <param name="threadcontroller">API Thread Controller</param>
         /// <param name="webhookscontroller">API Webhook Controller</param>
-        public PageController(Database db, ServerConfig config, ThreadController threadcontroller, WebhooksController webhookscontroller)
+        /// <param name="signIn">Sign in manager</param>
+        /// <param name="userManager">User manager</param>
+        public PageController(Database db, ServerConfig config, ThreadController threadcontroller, WebhooksController webhookscontroller, SignInManager<ChandlerUser> signIn, UserManager<ChandlerUser> userManager)
         {
             this.Database = db;
             this.Config = config;
             this.ThreadController = threadcontroller;
             this.WebhooksController = webhookscontroller;
+            this.SignInManager = signIn;
+            this.UserManager = userManager;
         }
 
         /// <summary>
@@ -52,11 +55,33 @@ namespace Chandler.Controllers
         /// </summary>
         /// <returns>Index Page</returns>
         [HttpGet]
-        public IActionResult Index() => this.View(INDEX_PAGE_PATH, new IndexPageModel()
+        public async Task<IActionResult> Index()
         {
-            Boards = this.Database.Boards,
-            Config = this.Config
-        });
+            var authres = await HttpContext.AuthenticateAsync("Identity.External");
+            if (authres.Succeeded)
+            {
+                var props = authres.Ticket.Properties;
+                var princ = authres.Principal;
+                var claims = princ.Claims.ToList();
+                var username = claims.First(x => x.Type == ClaimTypes.Name).Value;
+                var id = ulong.Parse(claims.First(x => x.Type == ClaimTypes.NameIdentifier).Value);
+                var email = claims.First(x => x.Type == ClaimTypes.Email).Value;
+
+                await this.SignInManager.SignInWithClaimsAsync(new ChandlerUser()
+                {
+                    UserName = username,
+                    Email = email,
+                    DiscordId = id
+                }, props, claims);
+            }
+            else this.Response.Cookies.Delete("Identity.External");
+            ViewData["logo"] = this.Config.SiteConfig.SiteLogo;
+            return this.View(INDEX_PAGE_PATH, new IndexPageModel()
+            {
+                Boards = this.Database.Boards,
+                Config = this.Config
+            });
+        }
 
         /// <summary>
         /// Board page
@@ -188,24 +213,34 @@ namespace Chandler.Controllers
         [Route("thread/create"), HttpGet]
         public async Task<IActionResult> Board([FromQuery]string boardtag, [FromQuery]string text, [FromQuery]int parent_id = -1, [FromQuery]string username = null, [FromQuery]string topic = null, [FromQuery]string password = null, [FromQuery]string imageurl = null, [FromQuery]long replytoid = -1)
         {
-            var response = await this.ThreadController.CreatePost(new Thread()
+            var usr = await this.UserManager.GetUserAsync(this.User);
+            var res = await this.ThreadController.CreatePost(new Thread()
             {
                 BoardTag = boardtag,
                 GeneratePassword = password,
                 Text = text,
                 ParentId = parent_id,
-                Username = username,
+                Username = username ?? this.User.Identity?.Name,
                 Image = imageurl,
                 ReplyToId = replytoid,
-                Topic = topic
+                Topic = topic,
+                UserId = usr?.Id ?? "-1"
             });
-            var badres = response.Result as BadRequestObjectResult;
-            var boardview = (ViewResult)this.Board(boardtag, status: new ApiActionStatus()
+
+            ApiActionStatus apistatus;
+            if (res.Result is BadRequestObjectResult badres) apistatus = new ApiActionStatus()
             {
-                Message = (badres == null) ? "Thread posted" : badres.Value.ToString(),
-                ResponseCode = (badres == null) ? 200 : 400,
+                Message = badres.Value.ToString(),
+                ResponseCode = 400,
                 Title = "Post"
-            });
+            };
+            else apistatus = new ApiActionStatus()
+            {
+                Message = "Thread Posted",
+                ResponseCode = 200,
+                Title = "Post"
+            };
+            var boardview = (ViewResult)this.Board(boardtag, status: apistatus);
             return this.View(BOARD_PAGE_PATH, boardview.Model);
         }
 
@@ -220,13 +255,21 @@ namespace Chandler.Controllers
         public IActionResult DeletePostFromQuery([FromQuery]int postid, [FromQuery]string password, [FromQuery]string board_tag)
         {
             var res = this.ThreadController.DeletePost(postid, password);
-            var badres = res.Result as BadRequestObjectResult;
-            var boardview = (ViewResult)this.Board(board_tag, status: new ApiActionStatus()
+            ApiActionStatus apistatus;
+            if (res.Result is BadRequestObjectResult badres)
+                apistatus = new ApiActionStatus()
+                {
+                    Message = badres.Value.ToString(),
+                    ResponseCode = 400,
+                    Title = "Delete"
+                };
+            else apistatus = new ApiActionStatus()
             {
-                Message = (badres == null) ? "Thread deleted" : badres.Value.ToString(),
-                ResponseCode = (badres == null) ? 200 : 400,
+                Message = "Thread deleted",
+                ResponseCode = 200,
                 Title = "Delete"
-            });
+            };
+            var boardview = (ViewResult)this.Board(board_tag, status: apistatus);
             return this.View(BOARD_PAGE_PATH, boardview.Model);
         }
 
@@ -240,16 +283,24 @@ namespace Chandler.Controllers
         [Route("webhooksub"), HttpGet]
         public IActionResult FormSub([FromQuery]string url, [FromQuery]string boardtag = null, [FromQuery]int? threadid = null)
         {
-            var res = this.WebhooksController.SubscribeWebhook(url, boardtag, threadid);
-            var badres = res.Result as BadRequestObjectResult;
+            var res = this.WebhooksController.SubscribeWebhook(url, boardtag, threadid); ApiActionStatus apistatus;
+            if (res.Result is BadRequestObjectResult badres)
+                apistatus = new ApiActionStatus()
+                {
+                    Message = badres.Value.ToString(),
+                    ResponseCode = 400,
+                    Title = "Webhook"
+                };
+            else apistatus = new ApiActionStatus()
+            {
+                Message = "Success",
+                ResponseCode = 200,
+                Title = "Webhook"
+            };
+
             return this.View(INDEX_PAGE_PATH, new IndexPageModel()
             {
-                ActionStatus = new ApiActionStatus()
-                {
-                    Message = (badres != null) ? badres.Value.ToString() : "Success",
-                    ResponseCode = (res.Result as OkObjectResult) == null ? 400 : 200,
-                    Title = "Webhook"
-                },
+                ActionStatus = apistatus,
                 Boards = this.Database.Boards,
                 Config = this.Config
             });
@@ -266,15 +317,24 @@ namespace Chandler.Controllers
         public IActionResult FormUnsub([FromQuery]string url, [FromQuery]string boardtag = null, [FromQuery]int? threadid = null)
         {
             var res = this.WebhooksController.UnSubscribeWebhook(url, boardtag, threadid);
-            var badres = res as BadRequestObjectResult;
+            ApiActionStatus apistatus;
+            if (res is BadRequestObjectResult badres)
+                apistatus = new ApiActionStatus()
+                {
+                    Message = badres.Value.ToString(),
+                    ResponseCode = 400,
+                    Title = "Webhook"
+                };
+            else apistatus = new ApiActionStatus()
+            {
+                Message = "Success",
+                ResponseCode = 200,
+                Title = "Webhook"
+            };
+
             return this.View(INDEX_PAGE_PATH, new IndexPageModel()
             {
-                ActionStatus = new ApiActionStatus()
-                {
-                    Message = (badres != null) ? badres.Value.ToString() : "Success",
-                    ResponseCode = (badres != null) ? 400 : 200,
-                    Title = "Webhook"
-                },
+                ActionStatus = apistatus,
                 Boards = this.Database.Boards,
                 Config = this.Config
             });

@@ -1,8 +1,6 @@
 ﻿using Chandler.Data.Entities;
-using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
@@ -24,6 +22,7 @@ namespace Chandler.Data
         public static async Task SendContentToAllAsync(Database ctx, Thread thread)
         {
             var subs = ctx.WebhookSubscritptions.Where(x => x.BoardTag == thread.BoardTag || x.ThreadId == thread.ParentId);
+            if (subs.Count() == 0) return;
             using var http = new HttpClient();
             var jsondata = JsonConvert.SerializeObject(new DiscordWebhookBody()
             {

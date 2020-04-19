@@ -9,6 +9,11 @@
             Login api controller
             </summary>
         </member>
+        <member name="P:Chandler.Controllers.AccountController.SignInManager">
+            <summary>
+            SignInManager for Accounts
+            </summary>
+        </member>
         <member name="M:Chandler.Controllers.AccountController.#ctor(Chandler.ServerConfig,Chandler.Data.Database,Microsoft.AspNetCore.Identity.UserManager{Chandler.Data.Entities.ChandlerUser},Microsoft.AspNetCore.Identity.SignInManager{Chandler.Data.Entities.ChandlerUser})">
             <summary>
             Ctor
@@ -41,6 +46,14 @@
             <returns>ChandlerUser object on success</returns>
             <response code="400">If any of the query parameters are null or if the email has already been registered</response>
             <response code="500">If there is an error when creating the new user account</response>
+        </member>
+        <member name="M:Chandler.Controllers.AccountController.DeleteAccountAsync(System.Security.Claims.ClaimsPrincipal,Chandler.Data.Entities.AccountDetailsBody)">
+            <summary>
+            Deletes an account
+            </summary>
+            <param name="usrclaim">Current user's claims</param>
+            <param name="details">Account details</param>
+            <returns>200 OK on deletion</returns>
         </member>
         <member name="T:Chandler.Controllers.BoardController">
             <summary>
@@ -196,6 +209,12 @@
             <param name="db">Database</param>
             <param name="login">Login API Controller</param>
         </member>
+        <member name="M:Chandler.Controllers.AccountPageController.LoginWithDiscord">
+            <summary>
+            Login using discord
+            </summary>
+            <returns>Discord Challenge</returns>
+        </member>
         <member name="M:Chandler.Controllers.AccountPageController.Login">
             <summary>
             Returns login page
@@ -231,12 +250,26 @@
             </summary>
             <returns>Index page</returns>
         </member>
+        <member name="M:Chandler.Controllers.AccountPageController.Delete">
+            <summary>
+            Delete account page
+            </summary>
+            <returns>DeleteAccount Page</returns>
+        </member>
+        <member name="M:Chandler.Controllers.AccountPageController.DeleteFromPost(System.String,System.String)">
+            <summary>
+            Deletes account
+            </summary>
+            <param name="UsernameOrEmail">Username or Email of the user</param>
+            <param name="Password">Password of the user</param>
+            <returns>IndexPage</returns>
+        </member>
         <member name="T:Chandler.Controllers.PageController">
             <summary>
             Page Controller
             </summary>
         </member>
-        <member name="M:Chandler.Controllers.PageController.#ctor(Chandler.Data.Database,Chandler.ServerConfig,Chandler.Controllers.ThreadController,Chandler.Controllers.WebhooksController)">
+        <member name="M:Chandler.Controllers.PageController.#ctor(Chandler.Data.Database,Chandler.ServerConfig,Chandler.Controllers.ThreadController,Chandler.Controllers.WebhooksController,Microsoft.AspNetCore.Identity.SignInManager{Chandler.Data.Entities.ChandlerUser},Microsoft.AspNetCore.Identity.UserManager{Chandler.Data.Entities.ChandlerUser})">
             <summary>
             Page Ctor
             </summary>
@@ -244,6 +277,8 @@
             <param name="config">Server Configuration</param>
             <param name="threadcontroller">API Thread Controller</param>
             <param name="webhookscontroller">API Webhook Controller</param>
+            <param name="signIn">Sign in manager</param>
+            <param name="userManager">User manager</param>
         </member>
         <member name="M:Chandler.Controllers.PageController.Index">
             <summary>
@@ -370,6 +405,31 @@
             </summary>
             <param name="optionsBuilder">DbContextOptionsBuilder</param>
         </member>
+        <member name="T:Chandler.Data.Entities.AdminInfo">
+            <summary>
+            Admin object
+            </summary>
+        </member>
+        <member name="P:Chandler.Data.Entities.AdminInfo.Id">
+            <summary>
+            Id
+            </summary>
+        </member>
+        <member name="P:Chandler.Data.Entities.AdminInfo.IsServerAdmin">
+            <summary>
+            Whether or not the user is an Admin of the entire server
+            </summary>
+        </member>
+        <member name="P:Chandler.Data.Entities.AdminInfo.IsBoardAdmin">
+            <summary>
+            Whether or not the user is the Admin of a board
+            </summary>
+        </member>
+        <member name="P:Chandler.Data.Entities.AdminInfo.AdminOf">
+            <summary>
+            The board the user is an admin of, if any.
+            </summary>
+        </member>
         <member name="T:Chandler.Data.Entities.Board">
             <summary>
             Board Object
@@ -405,19 +465,14 @@
             ChandlerUser object
             </summary>
         </member>
-        <member name="P:Chandler.Data.Entities.ChandlerUser.IsServerAdmin">
+        <member name="P:Chandler.Data.Entities.ChandlerUser.AdminInfo">
             <summary>
-            Whether or not the user is an Admin of the entire server
+            Information about the admin status of the user
             </summary>
         </member>
-        <member name="P:Chandler.Data.Entities.ChandlerUser.IsBoardAdmin">
+        <member name="P:Chandler.Data.Entities.ChandlerUser.DiscordId">
             <summary>
-            Whether or not the user is the Admin of a board
-            </summary>
-        </member>
-        <member name="P:Chandler.Data.Entities.ChandlerUser.AdminOf">
-            <summary>
-            The board the user is an admin of, if any.
+            The Discord Snowflake Id of the user who signed in using discord
             </summary>
         </member>
         <member name="T:Chandler.Data.Entities.DatabaseProvider">
@@ -443,26 +498,6 @@
         <member name="F:Chandler.Data.Entities.DatabaseProvider.SqlServer">
             <summary>
             Use an SqlServer
-            </summary>
-        </member>
-        <member name="T:Chandler.Data.Entities.DefaultAdmin">
-            <summary>
-            Default Admin object
-            </summary>
-        </member>
-        <member name="P:Chandler.Data.Entities.DefaultAdmin.Username">
-            <summary>
-            Admin username
-            </summary>
-        </member>
-        <member name="P:Chandler.Data.Entities.DefaultAdmin.Email">
-            <summary>
-            Admin email
-            </summary>
-        </member>
-        <member name="P:Chandler.Data.Entities.DefaultAdmin.Password">
-            <summary>
-            Admin password
             </summary>
         </member>
         <member name="T:Chandler.Data.Entities.Password">
@@ -498,6 +533,11 @@
         <member name="P:Chandler.Data.Entities.Thread.ParentId">
             <summary>
             The ID to the parent of the thread (-1 if the thread has no parent)
+            </summary>
+        </member>
+        <member name="P:Chandler.Data.Entities.Thread.UserId">
+            <summary>
+            The ID of the user who posted the thread ('-1' if the thread was posted anonymously)
             </summary>
         </member>
         <member name="P:Chandler.Data.Entities.Thread.BoardTag">
@@ -583,6 +623,26 @@
         <member name="P:Chandler.Data.Entities.WebhookSubscription.ThreadId">
             <summary>
             The ID of the thread to listen to
+            </summary>
+        </member>
+        <member name="T:Chandler.Data.Entities.DiscordOAuthSettings">
+            <summary>
+            Settings for discord oauth
+            </summary>
+        </member>
+        <member name="P:Chandler.Data.Entities.DiscordOAuthSettings.ClientId">
+            <summary>
+            Application Client ID
+            </summary>
+        </member>
+        <member name="P:Chandler.Data.Entities.DiscordOAuthSettings.ClientSecret">
+            <summary>
+            Application Client Secret
+            </summary>
+        </member>
+        <member name="P:Chandler.Data.Entities.DiscordOAuthSettings.RedirectUri">
+            <summary>
+            Application Redirect URI
             </summary>
         </member>
         <member name="T:Chandler.Data.Entities.DiscordWebhookBody">
@@ -710,6 +770,51 @@
             Total Uptime of the server
             </summary>
         </member>
+        <member name="T:Chandler.Data.Entities.SiteConfig">
+            <summary>
+            Site Config Object
+            </summary>
+        </member>
+        <member name="P:Chandler.Data.Entities.SiteConfig.SiteName">
+            <summary>
+            Name for the site
+            </summary>
+        </member>
+        <member name="P:Chandler.Data.Entities.SiteConfig.SiteFavicon">
+            <summary>
+            The favicon for the stie
+            </summary>
+        </member>
+        <member name="P:Chandler.Data.Entities.SiteConfig.SiteLogo">
+            <summary>
+            The logo for the site
+            </summary>
+        </member>
+        <member name="P:Chandler.Data.Entities.SiteConfig.AdminUsername">
+            <summary>
+            Username for server admin
+            </summary>
+        </member>
+        <member name="P:Chandler.Data.Entities.SiteConfig.AdminEmail">
+            <summary>
+            Username for server admin
+            </summary>
+        </member>
+        <member name="P:Chandler.Data.Entities.SiteConfig.AdminPassword">
+            <summary>
+            Username for server admin
+            </summary>
+        </member>
+        <member name="P:Chandler.Data.Entities.SiteConfig.DefaultPassword">
+            <summary>
+            The default master password for threads and admin user
+            </summary>
+        </member>
+        <member name="P:Chandler.Data.Entities.SiteConfig.BaseUrl">
+            <summary>
+            Base url of the server the application is running on
+            </summary>
+        </member>
         <member name="T:Chandler.Data.AccountHelper">
             <summary>
             Helper class for accounts
@@ -816,29 +921,14 @@
             Connection string for the database
             </summary>
         </member>
-        <member name="P:Chandler.ServerConfig.SiteName">
+        <member name="P:Chandler.ServerConfig.SiteConfig">
             <summary>
-            Name for the entire site
+            Configuration for the site
             </summary>
         </member>
-        <member name="P:Chandler.ServerConfig.SiteLogo">
+        <member name="P:Chandler.ServerConfig.DiscordOAuthSettings">
             <summary>
-            The logo for the site
-            </summary>
-        </member>
-        <member name="P:Chandler.ServerConfig.DefaultPassword">
-            <summary>
-            The default master password for threads and admin user
-            </summary>
-        </member>
-        <member name="P:Chandler.ServerConfig.BaseUrl">
-            <summary>
-            Base url of the server the application is running on
-            </summary>
-        </member>
-        <member name="P:Chandler.ServerConfig.DefaultAdminUsers">
-            <summary>
-            Default admin users for the server
+            Configuration for discord oauth
             </summary>
         </member>
         <member name="T:Chandler.Models.DeletePageModel">
@@ -864,16 +954,6 @@
         <member name="P:Chandler.Models.DeletePageModel.Config">
             <summary>
             Configuration for the server
-            </summary>
-        </member>
-        <member name="T:Chandler.Models.LoginPageModel">
-            <summary>
-            Login Page Model
-            </summary>
-        </member>
-        <member name="P:Chandler.Models.LoginPageModel.Config">
-            <summary>
-            Server Config
             </summary>
         </member>
         <member name="T:Chandler.Models.NewPostPageModel">

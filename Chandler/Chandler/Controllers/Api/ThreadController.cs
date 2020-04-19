@@ -1,14 +1,11 @@
 ﻿using Chandler.Data;
 using Chandler.Data.Entities;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http;
-using System.Text;
-using System.Text.Encodings.Web;
-using System.Text.Unicode;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace Chandler.Controllers
@@ -117,7 +114,7 @@ namespace Chandler.Controllers
             int passid = -1;
             if (!string.IsNullOrWhiteSpace(passw))
             {
-                (var hash, var salt) = Passworder.GenerateHash(passw, this.Config.DefaultPassword);
+                (var hash, var salt) = Passworder.GenerateHash(passw, this.Config.SiteConfig.DefaultPassword);
                 var newpass = new Password()
                 {
                     Hash = hash,
@@ -156,7 +153,7 @@ namespace Chandler.Controllers
                 var passwd = this.Database.Passwords.FirstOrDefault(x => x.Id == thread.PasswordId);
                 if (passwd != null)
                 {
-                    var passcorrect = Passworder.VerifyPassword(pass, passwd.Hash, passwd.Salt, this.Config.DefaultPassword);
+                    var passcorrect = Passworder.VerifyPassword(pass, passwd.Hash, passwd.Salt, this.Config.SiteConfig.DefaultPassword);
                     if (passcorrect)
                     {
                         this.Database.Threads.Remove(thread);
@@ -167,7 +164,7 @@ namespace Chandler.Controllers
 
                 // failed, trying with master password
                 var mpasswd = this.Database.Passwords.First(x => x.Id == -1);
-                var mpasscorrect = Passworder.VerifyPassword(pass, mpasswd.Hash, mpasswd.Salt, this.Config.DefaultPassword);
+                var mpasscorrect = Passworder.VerifyPassword(pass, mpasswd.Hash, mpasswd.Salt, this.Config.SiteConfig.DefaultPassword);
 
                 if (mpasscorrect)
                 {

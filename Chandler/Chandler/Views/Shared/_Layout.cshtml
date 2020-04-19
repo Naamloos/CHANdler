@@ -15,18 +15,18 @@
         if (!this.User.Identity?.IsAuthenticated ?? false)
         {
             <div class="navbar">
-                <ul class="navbar-data">
-                    <li class="navbar-item"><a class="navbar-item-link" href="/Login">Login</a></li>
-                    <li class="navbar-item"><a class="navbar-item-link" href="/Register">Register</a></li>
-                </ul>
+                    <ul class="navbar-data">
+                        <li class="navbar-item"><a class="navbar-item-link" href="/Login">Login</a></li>
+                        <li class="navbar-item"><a class="navbar-item-link" href="/Register">Register</a></li>
+                    </ul>
             </div>
         }
         else
         {
-
             <div class="navbar">
                 <ul class="navbar-data">
                     <li class="navbar-item"><p class="nav-pel">Logged in as: @this.User.Identity.Name</p></li>
+                    <li class="navbar-item"><a class="navbar-item-link" href="/userdelete">Delete Account</a></li>
                     <li class="navbar-item"><a class="navbar-item-link" href="/account/Logout">Logout</a></li>
                 </ul>
             </div>

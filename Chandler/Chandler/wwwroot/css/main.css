@@ -1,8 +1,8 @@
 :root {
     --text-colour: #ffffff;
-    --body-colour: #151515;
+    --body-colour: #111111;
     --border-colour: #585858;
-    --secondary-bg-colour: #262626;
+    --secondary-bg-colour: #242424;
     --hov-colour: #536253;
     --link-colour: #BA0000;
 }
@@ -137,23 +137,12 @@ option {
     color: var(--text-colour);
 }
 
-.whdrop {
-    text-align: center;
-    background-color: var(--secondary-bg-colour);
-    color: var(--text-colour);
-    width: 150px;
-}
-
-.whdrop:hover {
-    border-color: var(--border-colour);
-}
-
-.whhone {
+.phhone {
     text-align: center;
     padding-top: 5%;
 }
 
-.whdiv {
+.phdiv {
     border: solid 2px white;
     width: 25%;
     height: 10%;

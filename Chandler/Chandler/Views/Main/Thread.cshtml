@@ -71,11 +71,11 @@
     @{
         var meta = new MetadataViewModel()
         {
-            Title = $"{Model.Config.SiteName} - /{Model.BoardInfo.Tag}/ ",
+            Title = $"{Model.Config.SiteConfig.SiteName} - /{Model.BoardInfo.Tag}/ ",
             Config = Model.Config,
             Description = Model.Thread.Text,
             RelativeUrl = Url.RouteUrl(ViewContext.RouteData.Values),
-            Image = Model.Config.SiteLogo,
+            Image = Model.Config.SiteConfig.SiteLogo,
             ImageRelative = true
         };
 
@@ -94,6 +94,6 @@
             meta.Image = this.Model.Thread.Image;
         }
 
-        @Html.Partial("_Metadata", meta)
+        @await Html.PartialAsync("_Metadata", meta)
     }
 }

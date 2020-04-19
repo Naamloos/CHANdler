@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace Chandler.Data.Entities
+namespace SetupUtility.Entities
 {
     /// <summary>
     /// Default Admin object

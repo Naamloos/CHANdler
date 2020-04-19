@@ -1,9 +1,4 @@
 ﻿using Microsoft.AspNetCore.Identity;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Chandler.Data.Entities
 {
@@ -13,18 +8,13 @@ namespace Chandler.Data.Entities
     public class ChandlerUser : IdentityUser
     {
         /// <summary>
-        /// Whether or not the user is an Admin of the entire server
+        /// Information about the admin status of the user
         /// </summary>
-        public bool IsServerAdmin { get; set; } = false;
+        public AdminInfo AdminInfo { get; set; } = new AdminInfo();
 
         /// <summary>
-        /// Whether or not the user is the Admin of a board
+        /// The Discord Snowflake Id of the user who signed in using discord
         /// </summary>
-        public bool IsBoardAdmin { get; set; } = false;
-
-        /// <summary>
-        /// The board the user is an admin of, if any.
-        /// </summary>
-        public string AdminOf { get; set; } = null;
+        public ulong? DiscordId { get; set; } = null;
     }
 }

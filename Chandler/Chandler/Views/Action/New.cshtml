@@ -3,12 +3,13 @@
 <div id="newpost">
     <form action="/thread/create">
         @Html.AntiForgeryToken()
-        <input type="text" name="username" placeholder="Anonymous">
+        <input type="text" name="username" placeholder="Anonymous" />
         @{
             if (!Model.IsCommentReply && !Model.IsThreadReply)
             {
                 <input type="text" name="topic" placeholder="(Optional) Topic...">
             }
+
             if (Model.IsCommentReply)
             {
                 <textarea name="text">>>@Model.ReplyToId</textarea>
@@ -23,6 +24,7 @@
         <input type="hidden" value="@Model.BoardTag" name="boardtag" style="opacity: 0;" />
         <input type="hidden" value="@Model.ParentId" name="parent_id" style="opacity: 0;" />
         <input type="hidden" value="@Model.ReplyToId" name="replytoid" style="opacity: 0;" />
+        <input type="hidden" value="@User.Identity.Name" name="identityname" style="opacity:0;" />
         <input type="submit" placeholder="Post" />
     </form>
 
@@ -33,12 +35,12 @@
 @* This part defines the metadata stuff. *@
 @section metadata
 {
-    @Html.Partial("_Metadata", new MetadataViewModel()
+    @await Html.PartialAsync("_Metadata", new MetadataViewModel()
     {
-        Title = $"{Model.Config.SiteName} - New Post (/{Model.BoardTag}/)",
+        Title = $"{Model.Config.SiteConfig.SiteName} - New Post (/{Model.BoardTag}/)",
         Config = Model.Config,
         Description = "Create a new post.",
-        Image = Model.Config.SiteLogo,
+        Image = Model.Config.SiteConfig.SiteLogo,
         ImageRelative = true,
         RelativeUrl = Url.RouteUrl(ViewContext.RouteData.Values)
     })
