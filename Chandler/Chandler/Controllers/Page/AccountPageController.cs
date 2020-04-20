@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
+using System;
 using System.Threading.Tasks;
 
 namespace Chandler.Controllers
@@ -62,6 +63,7 @@ namespace Chandler.Controllers
                 Username = UsernameOrEmail,
                 Password = Password
             });
+
             if (res.Result is BadRequestObjectResult badreq)
             {
                 return this.View(INDEX_PAGE_PATH, new IndexPageModel()
@@ -70,6 +72,22 @@ namespace Chandler.Controllers
                     {
                         Message = $"Unsuccessful: {badreq.Value}",
                         ResponseCode = 400,
+                        Title = "Login"
+                    },
+                    Boards = this.Database.Boards,
+                    Config = this.Config
+                });
+            }
+            else if (res.Result is ObjectResult obj && res.Result.GetType() != typeof(OkObjectResult))
+            {
+                this.HttpContext.Response.Headers.Add("X-Retry-After", ((ChandlerUser)obj.Value).LockoutEnd?.UtcDateTime.ToShortTimeString());
+
+                return this.View(INDEX_PAGE_PATH, new IndexPageModel()
+                {
+                    ActionStatus = new ApiActionStatus()
+                    {
+                        Message = $"Unsuccessful: Too many login attempts. Try again later",
+                        ResponseCode = 429,
                         Title = "Login"
                     },
                     Boards = this.Database.Boards,

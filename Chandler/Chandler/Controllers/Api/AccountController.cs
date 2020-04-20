@@ -68,11 +68,7 @@ namespace Chandler.Controllers
             var user = await this.Helper.FindUserAsync(details.Username, details.Email);
             if (user == null) return this.BadRequest("Username/Email or Password was incorrect");
 
-            if (user.LockoutEnd > DateTime.Now)
-            {
-                this.HttpContext.Response.Headers.Add("X-Retry-After", user.LockoutEnd?.UtcTicks.ToString());
-                return this.StatusCode(429, "Too many failed login requests");
-            }
+            if (user.LockoutEnd > DateTime.Now) return this.StatusCode(429, user);
 
             var idenres = await this.SignInManager.PasswordSignInAsync(user, details.Password, true, true);
             if (idenres.Succeeded) return this.Ok(user);

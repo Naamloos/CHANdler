@@ -1,6 +1,6 @@
 ﻿@model IndexPageModel
 
-@if (Model.ActionStatus != null && Model.ActionStatus?.ResponseCode == 400)
+@if (Model.ActionStatus != null && Model.ActionStatus?.ResponseCode != 200)
 {
     <div class="alert">
         <h2>Attention</h2>
