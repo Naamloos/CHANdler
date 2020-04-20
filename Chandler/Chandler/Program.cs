@@ -2,6 +2,8 @@
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
+using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Chandler
@@ -17,6 +19,12 @@ namespace Chandler
         /// <param name="args"></param>
         public static async Task Main(string[] args)
         {
+            if(args.Contains("-setup"))
+            {
+                Console.WriteLine("doot doot setup");
+                return;
+            }
+
             var webhost = CreateWebHostBuilder(args).Build();
 
             using var scope = webhost.Services.CreateScope();
