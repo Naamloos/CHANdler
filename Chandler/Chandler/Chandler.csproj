@@ -46,6 +46,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Update="config\config.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Update="wwwroot\css\main.css">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
