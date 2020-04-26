@@ -10,7 +10,7 @@ namespace Chandler.Controllers
     /// <summary>
     /// Webhook controller
     /// </summary>
-    [ApiController, Route("api/[controller]"), Produces("application/json"), AllowAnonymous]
+    [ApiController, Route("api/[controller]"), Produces("application/json"), AllowAnonymous, BeforeExecute]
     public class WebhooksController : Controller
     {
         const string WebhookRegex = @"(https:\/\/(?:canary\.|)discordapp\.com\/api\/webhooks\/([0-9]+)\/(.+))";

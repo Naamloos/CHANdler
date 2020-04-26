@@ -223,6 +223,9 @@ namespace Chandler
                 .SetCompatibilityVersion(CompatibilityVersion.Version_3_0)
                 .AddControllersAsServices();
 
+            services.AddTransient<AccountHelper>();
+
+            services.AddSingleton(new DbActionHelper(this._db));
             #endregion
         }
 

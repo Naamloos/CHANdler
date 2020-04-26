@@ -13,7 +13,7 @@ namespace Chandler.Controllers
     /// <summary>
     /// Api Controller For Threads
     /// </summary>
-    [ApiController, Route("api/[controller]"), Produces("application/json"), AllowAnonymous]
+    [ApiController, Route("api/[controller]"), Produces("application/json"), AllowAnonymous, BeforeExecute]
     public class ThreadController : Controller
     {
         private readonly Database Database;
@@ -48,7 +48,7 @@ namespace Chandler.Controllers
                 {
                     var childedthreads = boardthreads.OrderBy(x => x.Id).ToList();
                     childedthreads.ForEach(x => x.ChildThreads = boardthreads.Where(a => a.ParentId == x.Id));
-                    return childedthreads;
+                    return this.Ok(childedthreads);
                 }
             }
             else return this.NotFound("Board not found or the board has no threads");

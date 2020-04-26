@@ -11,7 +11,7 @@ namespace Chandler.Controllers
     /// <summary>
     /// Server object
     /// </summary>
-    [ApiController, Route("api/[controller]"), Produces("application/json"), AllowAnonymous]
+    [ApiController, Route("api/[controller]"), Produces("application/json"), AllowAnonymous, BeforeExecute]
     public class ServerController : ControllerBase
     {
         private readonly Database Database;

@@ -10,7 +10,7 @@ namespace Chandler.Controllers
     /// <summary>
     /// Board Object
     /// </summary>
-    [ApiController, Route("api/[controller]"), Produces("application/json"), AllowAnonymous]
+    [ApiController, Route("api/[controller]"), Produces("application/json"), AllowAnonymous, BeforeExecute]
     public class BoardController : Controller
     {
         private readonly Database Database;

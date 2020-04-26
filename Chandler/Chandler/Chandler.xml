@@ -14,14 +14,14 @@
             SignInManager for Accounts
             </summary>
         </member>
-        <member name="M:Chandler.Controllers.AccountController.#ctor(Chandler.ServerConfig,Chandler.Data.Database,Microsoft.AspNetCore.Identity.UserManager{Chandler.Data.Entities.ChandlerUser},Microsoft.AspNetCore.Identity.SignInManager{Chandler.Data.Entities.ChandlerUser})">
+        <member name="M:Chandler.Controllers.AccountController.#ctor(Chandler.Data.Database,Microsoft.AspNetCore.Identity.UserManager{Chandler.Data.Entities.ChandlerUser},Microsoft.AspNetCore.Identity.SignInManager{Chandler.Data.Entities.ChandlerUser},Chandler.Data.AccountHelper)">
             <summary>
             Ctor
             </summary>
-            <param name="conf">Server Config</param>
             <param name="db">Database</param>
             <param name="usermanager">User Manager</param>
             <param name="signmanager">Sign In Manager</param>
+            <param name="help">Account helper</param>
         </member>
         <member name="M:Chandler.Controllers.AccountController.LoginAsync(Chandler.Data.Entities.AccountDetailsBody)">
             <summary>
@@ -269,7 +269,7 @@
             Page Controller
             </summary>
         </member>
-        <member name="M:Chandler.Controllers.PageController.#ctor(Chandler.Data.Database,Chandler.ServerConfig,Chandler.Controllers.ThreadController,Chandler.Controllers.WebhooksController,Microsoft.AspNetCore.Identity.SignInManager{Chandler.Data.Entities.ChandlerUser},Microsoft.AspNetCore.Identity.UserManager{Chandler.Data.Entities.ChandlerUser})">
+        <member name="M:Chandler.Controllers.PageController.#ctor(Chandler.Data.Database,Chandler.ServerConfig,Chandler.Controllers.ThreadController,Chandler.Controllers.WebhooksController,Microsoft.AspNetCore.Identity.UserManager{Chandler.Data.Entities.ChandlerUser},Chandler.Data.AccountHelper)">
             <summary>
             Page Ctor
             </summary>
@@ -277,8 +277,8 @@
             <param name="config">Server Configuration</param>
             <param name="threadcontroller">API Thread Controller</param>
             <param name="webhookscontroller">API Webhook Controller</param>
-            <param name="signIn">Sign in manager</param>
             <param name="userManager">User manager</param>
+            <param name="help">Account Helper</param>
         </member>
         <member name="M:Chandler.Controllers.PageController.Index">
             <summary>
@@ -330,7 +330,7 @@
             <summary>
             Creates a new thread and returns to the board page
             </summary>
-            <param name="boardtag">Board tag</param>
+            <param name="board_tag">Board tag</param>
             <param name="text">Message text</param>
             <param name="parent_id">Parent Id of the thread</param>
             <param name="username">Username to display</param>
@@ -342,10 +342,10 @@
         </member>
         <member name="M:Chandler.Controllers.PageController.DeletePostFromQuery(System.Int32,System.String,System.String)">
             <summary>
-            Deletes a post using a query
+            deletes a post using a query
             </summary>
-            <param name="postid">The id of the post to delete</param>
-            <param name="password">Password to delete the post</param>
+            <param name="postid">the id of the post to delete</param>
+            <param name="password">password to delete the post</param>
             <param name="board_tag">Board tag</param>
             <returns>Board page</returns>
         </member>
@@ -370,6 +370,11 @@
         <member name="T:Chandler.Data.Database">
             <summary>
             Database Object
+            </summary>
+        </member>
+        <member name="P:Chandler.Data.Database.DbSema">
+            <summary>
+            Semaphore for the database
             </summary>
         </member>
         <member name="P:Chandler.Data.Database.Boards">
@@ -735,6 +740,25 @@
             The message
             </summary>
         </member>
+        <member name="T:Chandler.Data.Entities.BeforeExecuteAttribute">
+            <summary>
+            Before Execute Attribute
+            </summary>
+        </member>
+        <member name="M:Chandler.Data.Entities.BeforeExecuteAttribute.OnActionExecutionAsync(Microsoft.AspNetCore.Mvc.Filters.ActionExecutingContext,Microsoft.AspNetCore.Mvc.Filters.ActionExecutionDelegate)">
+            <summary>
+            Overridden OnActionExecutionAsync
+            </summary>
+            <param name="context"></param>
+            <param name="next"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Chandler.Data.Entities.BeforeExecuteAttribute.OnActionExecuted(Microsoft.AspNetCore.Mvc.Filters.ActionExecutedContext)">
+            <summary>
+            Overridden OnActionExecuted
+            </summary>
+            <param name="context"></param>
+        </member>
         <member name="T:Chandler.Data.Entities.ServerHealth">
             <summary>
             Server Health Object
@@ -820,11 +844,13 @@
             Helper class for accounts
             </summary>
         </member>
-        <member name="M:Chandler.Data.AccountHelper.#ctor(Microsoft.AspNetCore.Identity.UserManager{Chandler.Data.Entities.ChandlerUser})">
+        <member name="M:Chandler.Data.AccountHelper.#ctor(Microsoft.AspNetCore.Identity.UserManager{Chandler.Data.Entities.ChandlerUser},Microsoft.AspNetCore.Identity.SignInManager{Chandler.Data.Entities.ChandlerUser},Chandler.ServerConfig)">
             <summary>
             Ctor
             </summary>
             <param name="usermanager">User Manager</param>
+            <param name="signin">Sign in manager</param>
+            <param name="conf">Server Config</param>
         </member>
         <member name="M:Chandler.Data.AccountHelper.FindUserAsync(System.String,System.String)">
             <summary>
@@ -833,6 +859,53 @@
             <param name="username">Username of the user to find</param>
             <param name="email">Email of the user to find</param>
             <returns></returns>
+        </member>
+        <member name="M:Chandler.Data.AccountHelper.FindUserAsync(System.Security.Claims.ClaimsPrincipal)">
+            <summary>
+            Find a user
+            </summary>
+            <param name="claims">User claims</param>
+            <returns>Chandler User</returns>
+        </member>
+        <member name="M:Chandler.Data.AccountHelper.CheckForDefaultAdminAsync">
+            <summary>
+            Check db for admin users, if none, add a new one from config options
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Chandler.Data.AccountHelper.CheckExternalCookieAsync(Microsoft.AspNetCore.Http.HttpContext)">
+            <summary>
+            Check cookie for current external login data
+            </summary>
+            <param name="ctx">Current HttpContext</param>
+            <returns></returns>
+        </member>
+        <member name="T:Chandler.Data.DbActionHelper">
+            <summary>
+            Helper for doing actions on database from the Attribute
+            </summary>
+        </member>
+        <member name="P:Chandler.Data.DbActionHelper.Db">
+            <summary>
+            Database
+            </summary>
+        </member>
+        <member name="M:Chandler.Data.DbActionHelper.#ctor(Chandler.Data.Database)">
+            <summary>
+            DbActionHelper ctor
+            </summary>
+            <param name="db"></param>
+        </member>
+        <member name="M:Chandler.Data.DbActionHelper.WaitLockSemaphoreAsync">
+            <summary>
+            Lock the db semaphore
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Chandler.Data.DbActionHelper.ReleaseSemaphore">
+            <summary>
+            Release the semaphore
+            </summary>
         </member>
         <member name="T:Chandler.Data.Passworder">
             <summary>

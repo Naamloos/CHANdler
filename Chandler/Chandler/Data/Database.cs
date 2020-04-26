@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.Threading;
 
 namespace Chandler.Data
 {
@@ -11,6 +12,11 @@ namespace Chandler.Data
     public class Database : IdentityDbContext<ChandlerUser>
     {
         /// <summary>
+        /// Semaphore for the database
+        /// </summary>
+        public SemaphoreSlim DbSema { get; set; }
+
+        /// <summary>
         /// List of boards
         /// </summary>
         public DbSet<Board> Boards { get; set; }
@@ -18,7 +24,7 @@ namespace Chandler.Data
         /// <summary>
         /// List of threads
         /// </summary>
-        public DbSet<Thread> Threads { get; set; }
+        public DbSet<Entities.Thread> Threads { get; set; }
 
         /// <summary>
         /// List of passwords
@@ -43,6 +49,7 @@ namespace Chandler.Data
         {
             this.Provider = provider;
             this.ConnectionString = cstring;
+            this.DbSema = new SemaphoreSlim(1, 1);
         }
 
         /// <summary>

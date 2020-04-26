@@ -13,7 +13,7 @@ namespace Chandler.Controllers
     /// <summary>
     /// Controller for pages relating to accounts
     /// </summary>
-    [ApiExplorerSettings(IgnoreApi = true)]
+    [ApiExplorerSettings(IgnoreApi = true), BeforeExecute]
     public class AccountPageController : Controller
     {
         private const string INDEX_PAGE_PATH = "/Views/Main/Index.cshtml";

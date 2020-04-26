@@ -13,10 +13,9 @@ namespace Chandler.Controllers
     /// <summary>
     /// Login api controller
     /// </summary>
-    [ApiExplorerSettings(IgnoreApi = true)]
+    [ApiExplorerSettings(IgnoreApi = true), BeforeExecute]
     public class AccountController : Controller
     {
-        private ServerConfig Config { get; set; }
         private Database Database { get; set; }
         private AccountHelper Helper { get; set; }
         private UserManager<ChandlerUser> UserManager { get; set; }
@@ -29,17 +28,16 @@ namespace Chandler.Controllers
         /// <summary>
         /// Ctor
         /// </summary>
-        /// <param name="conf">Server Config</param>
         /// <param name="db">Database</param>
         /// <param name="usermanager">User Manager</param>
         /// <param name="signmanager">Sign In Manager</param>
-        public AccountController(ServerConfig conf, Database db, UserManager<ChandlerUser> usermanager, SignInManager<ChandlerUser> signmanager)
+        /// <param name="help">Account helper</param>
+        public AccountController(Database db, UserManager<ChandlerUser> usermanager, SignInManager<ChandlerUser> signmanager, AccountHelper help)
         {
-            this.Config = conf;
             this.Database = db;
-            this.Helper = new AccountHelper(usermanager);
             this.UserManager = usermanager;
             this.SignInManager = signmanager;
+            this.Helper = help;
         }
 
         /// <summary>
@@ -52,18 +50,6 @@ namespace Chandler.Controllers
         [AllowAnonymous, ValidateAntiForgeryToken]
         public async Task<ActionResult<ChandlerUser>> LoginAsync([FromBody]AccountDetailsBody details)
         {
-            if (this.Database.Users.Count(x => x.AdminInfo.IsServerAdmin) == 0)
-            {
-                var res = await this.UserManager.CreateAsync(new ChandlerUser()
-                {
-                    UserName = this.Config.SiteConfig.AdminUsername,
-                    Email = this.Config.SiteConfig.AdminEmail,
-                    AdminInfo = new AdminInfo() { IsServerAdmin = true }
-                }, this.Config.SiteConfig.AdminPassword);
-
-                if (!res.Succeeded) throw new Exception(res.Errors.First().Description);
-            }
-
             if (details.Username == null && details.Email == null) return this.BadRequest("No username or email has been provided");
             var user = await this.Helper.FindUserAsync(details.Username, details.Email);
             if (user == null) return this.BadRequest("Username/Email or Password was incorrect");
