@@ -1,3 +1,7 @@
+# ***Rewrite***
+This project is currently going under a rewrite. If you want to do any changes or PRing, please do so on the new rewrite branch. 
+The master branch is basically dead until rewrite gets merged over.
+
 # CHANdler
 CHANdler is image board software using ASP.NET Core MVC
 
