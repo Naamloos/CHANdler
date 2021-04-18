@@ -1,4 +1,7 @@
 ﻿using Chandler.Data.Entities;
+using Domain.EF.Entities.Main;
+using Domain.Misc;
+using System;
 using System.Collections.Generic;
 
 namespace Chandler.Models
@@ -21,7 +24,7 @@ namespace Chandler.Models
         /// <summary>
         /// Thread IDs for Threads with more than 5 responses
         /// </summary>
-        public IEnumerable<int> BigThreads { get; set; }
+        public IEnumerable<Guid> BigThreads { get; set; }
 
         /// <summary>
         /// Amount of pages available
@@ -42,10 +45,5 @@ namespace Chandler.Models
         /// Configuration for the server
         /// </summary>
         public ServerConfig Config { get; set; }
-
-        /// <summary>
-        /// Status of an Api action
-        /// </summary>
-        public ApiActionStatus ActionStatus { get; set; }
     }
 }

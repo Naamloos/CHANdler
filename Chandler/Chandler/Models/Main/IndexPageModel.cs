@@ -1,4 +1,6 @@
 ﻿using Chandler.Data.Entities;
+using Domain.EF.Entities.Main;
+using Domain.Misc;
 using System.Collections.Generic;
 
 namespace Chandler.Models
@@ -17,10 +19,5 @@ namespace Chandler.Models
         /// Configuration for the server
         /// </summary>
         public ServerConfig Config { get; set; }
-
-        /// <summary>
-        /// The status of an api action
-        /// </summary>
-        public ApiActionStatus ActionStatus { get; set; }
     }
 }

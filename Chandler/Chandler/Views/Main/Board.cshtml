@@ -1,15 +1,5 @@
 ﻿@model BoardPageModel
 
-@if (Model.ActionStatus != null && Model.ActionStatus?.ResponseCode == 400)
-{
-    <div class="alert">
-        <h2>Attention</h2>
-        <span class="closebtn" onclick="this.parentElement.style.display='none';">&times;</span>
-        <br />
-        <strong>@Model.ActionStatus.Title:</strong> @Model.ActionStatus.Message
-    </div>
-}
-
 <div id="boardmeta">
     <h1 class="board_title">@Model.BoardInfo.Name</h1>
     <p class="board_welcome">@Model.BoardInfo.Description</p>
@@ -50,7 +40,7 @@
     </div>
 
     @{
-        foreach (var mainthread in Model.Threads.Where(x => x.ParentId < 1))
+        foreach (var mainthread in Model.Threads.Where(x => x.ParentId != null))
         {
             var a = Model.Threads.ToList();
             <div class="thread">
@@ -68,9 +58,9 @@
                 </div>
                 <div class="threadtext">
                     @{
-                        if (mainthread.Image != null)
+                        if (mainthread.ImageUrl != null)
                         {
-                            <img class="imgsmall" onclick="imgclick(this)" src="@mainthread.Image">
+                            <img class="imgsmall" onclick="imgclick(this)" src="@mainthread.ImageUrl">
                         }
 
                         <p class="_linkify">@mainthread.Text</p>

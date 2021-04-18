@@ -4,12 +4,17 @@ using AspNet.Security.OAuth.Discord;
 using AspNetCoreRateLimit;
 using Chandler.Data;
 using Chandler.Data.Entities;
+using Domain.EF.Entities;
+using Domain.EF.Entities.Main;
+using Domain.Misc;
+using Domain.Repositories;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
@@ -28,23 +33,17 @@ namespace Chandler
     public class Startup
     {
         public IConfiguration Configuration { get; }
-
-        private readonly ServerConfig _config;
-        private readonly Database _db;
-        private readonly ServerMeta _meta;
-        private readonly string resfolderpath;
+        private ServerConfig ServerConfig { get; }
 
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
             var Currentdir = Directory.GetCurrentDirectory();
-            resfolderpath = Path.Combine(Currentdir, "res");
             var conffolderpath = Path.Combine(Currentdir, "config");
             var conffilepath = Path.Combine(Currentdir, "config", "config.json");
 
             //Make sure we have the folders we need even if -setup wasnt specified
             if (!Directory.Exists(conffolderpath)) Directory.CreateDirectory(conffolderpath);
-            if (!Directory.Exists(resfolderpath)) Directory.CreateDirectory(resfolderpath);
 
             if (!File.Exists(conffilepath))
             {
@@ -55,9 +54,7 @@ namespace Chandler
                 Trace.WriteLine("A new configuration file was created. To customise, please either edit the newly created file or run the Setup Utility");
             }
 
-            _config = JsonConvert.DeserializeObject<ServerConfig>(File.ReadAllText(conffilepath));
-            _db = new Database(_config.Provider, _config.ConnectionString);
-            _meta = new ServerMeta();
+            this.ServerConfig = JsonConvert.DeserializeObject<ServerConfig>(File.ReadAllText(conffilepath));
         }
 
         // This method gets called by the runtime. Use this method to add services to the container.
@@ -96,9 +93,6 @@ namespace Chandler
                 x.IncludeXmlComments($"{AppContext.BaseDirectory}/{Assembly.GetExecutingAssembly().GetName().Name}.xml");
             });
 
-            services.AddSingleton(_db);
-            services.AddSingleton(_meta);
-            services.AddSingleton(_config);
             services.AddCors(o => o.AddPolicy("publicpolicy", builder =>
             {
                 builder.AllowAnyOrigin()
@@ -106,101 +100,100 @@ namespace Chandler
                 .AllowAnyHeader();
             }));
 
-            this._db.Database.EnsureCreated();
+            services.AddRazorPages().AddRazorRuntimeCompilation();
 
-            if (this._db.Boards.Count() == 0)
-            {
-                // insert debug thread data to database
-                this._db.Boards.Add(new Board()
-                {
-                    Name = "CHANdler",
-                    Tag = "c",
-                    Description = "CHANdler test board",
-                    ImageUrl = "/res/logo.jpg"
-                });
+            //if (this._db.Boards.Count() == 0)
+            //{
+            //    // insert debug thread data to database
+            //    this._db.Boards.Add(new Board()
+            //    {
+            //        Name = "CHANdler",
+            //        Tag = "c",
+            //        Description = "CHANdler test board",
+            //        ImageUrl = "/res/logo.jpg"
+            //    });
 
-                this._db.Boards.Add(new Board()
-                {
-                    Name = "Random",
-                    Tag = "r",
-                    Description = "Random shit",
-                });
+            //    this._db.Boards.Add(new Board()
+            //    {
+            //        Name = "Random",
+            //        Tag = "r",
+            //        Description = "Random shit",
+            //    });
 
-                this._db.Boards.Add(new Board()
-                {
-                    Name = "Memes",
-                    Tag = "m",
-                    ImageUrl = "/res/pepo.gif",
-                    Description = "haha cool and good dank memes",
-                });
+            //    this._db.Boards.Add(new Board()
+            //    {
+            //        Name = "Memes",
+            //        Tag = "m",
+            //        ImageUrl = "/res/pepo.gif",
+            //        Description = "haha cool and good dank memes",
+            //    });
 
-                this._db.Boards.Add(new Board()
-                {
-                    Name = "Meta",
-                    Tag = "meta",
-                    ImageUrl = "/res/wrench.png",
-                    Description = "About CHANdler itself, e.g. development talk.",
-                });
+            //    this._db.Boards.Add(new Board()
+            //    {
+            //        Name = "Meta",
+            //        Tag = "meta",
+            //        ImageUrl = "/res/wrench.png",
+            //        Description = "About CHANdler itself, e.g. development talk.",
+            //    });
 
-                (var hash, var salt) = Passworder.GenerateHash(this._config.SiteConfig.DefaultPassword, this._config.SiteConfig.DefaultPassword);
+            //    (var hash, var salt) = Passworder.GenerateHash(this._config.SiteConfig.DefaultPassword, this._config.SiteConfig.DefaultPassword);
 
-                this._db.Passwords.Add(new Password()
-                {
-                    Id = -1,
-                    Hash = hash,
-                    Salt = salt
-                });
+            //    this._db.Passwords.Add(new Password()
+            //    {
+            //        Id = -1,
+            //        Hash = hash,
+            //        Salt = salt
+            //    });
 
-                this._db.SaveChanges();
-            }
+            //    this._db.SaveChanges();
+            //}
 
             #region Auth and Forgery
 
-            services.AddIdentity<ChandlerUser, IdentityRole>(x =>
+            services.AddDbContext<ChandlerContext>(options =>
             {
-                x.Password.RequiredLength = 8;
-                x.Password.RequiredUniqueChars = 0;
-                x.Password.RequireDigit = false;
-                x.Password.RequireLowercase = false;
-                x.Password.RequireNonAlphanumeric = false;
-                x.Password.RequireUppercase = false;
+                options.UseSqlite(this.ServerConfig.ConnectionString);
+                options.UseLazyLoadingProxies();
+            }, ServiceLifetime.Scoped);
 
-                x.User.RequireUniqueEmail = true;
-
-                x.Lockout.AllowedForNewUsers = true;
-                x.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
-                x.Lockout.MaxFailedAccessAttempts = 5;
-
-                x.User.AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@_-+=?/!\\ ";
-            }).AddEntityFrameworkStores<Database>()
-            .AddDefaultTokenProviders()
-            .AddUserManager<UserManager<ChandlerUser>>()
-            .AddSignInManager<SignInManager<ChandlerUser>>();
-
-            if (this._config.DiscordOAuthSettings != null)
+            services.AddIdentity<ChandlerUser, IdentityRole<Guid>>(options =>
             {
-                var clientid = this._config.DiscordOAuthSettings.ClientId.ToString();
-                var clientsecret = this._config.DiscordOAuthSettings.ClientSecret;
-                using var crng = new RNGCryptoServiceProvider();
-                var arr = new byte[15];
-                crng.GetBytes(arr);
-                var nonce = Convert.ToBase64String(arr);
+                options.SignIn.RequireConfirmedAccount = false;
+                options.SignIn.RequireConfirmedEmail = false;
+                options.SignIn.RequireConfirmedPhoneNumber = false;
+            })
+                .AddEntityFrameworkStores<ChandlerContext>()
+                .AddSignInManager<SignInManager<ChandlerUser>>()
+                .AddUserManager<UserManager<ChandlerUser>>()
+                .AddRoles<IdentityRole<Guid>>()
+                .AddRoleManager<RoleManager<IdentityRole<Guid>>>()
+                .AddTokenProvider<DataProtectorTokenProvider<ChandlerUser>>(TokenOptions.DefaultProvider);
 
-                services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-                    .AddDiscord(x =>
-                    {
-                        x.SignInScheme = "Identity.External";
-                        x.ClaimsIssuer = DiscordAuthenticationDefaults.Issuer;
-                        x.ReturnUrlParameter = "/";
-                        x.AccessDeniedPath = "/";
-                        x.ClientId = clientid;
-                        x.ClientSecret = clientsecret;
-                        x.TokenEndpoint = DiscordAuthenticationDefaults.TokenEndpoint;
-                        x.AuthorizationEndpoint = $"{DiscordAuthenticationDefaults.AuthorizationEndpoint}?response_type=code&client_id={clientid}&scope=identify&state={nonce}&redirect_uri={this._config.DiscordOAuthSettings.RedirectUri}";
-                        x.UserInformationEndpoint = DiscordAuthenticationDefaults.UserInformationEndpoint;
-                    });
-            }
-            else services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme);
+            //if (this._config.DiscordOAuthSettings != null)
+            //{
+            //    var clientid = this._config.DiscordOAuthSettings.ClientId.ToString();
+            //    var clientsecret = this._config.DiscordOAuthSettings.ClientSecret;
+            //    using var crng = new RNGCryptoServiceProvider();
+            //    var arr = new byte[15];
+            //    crng.GetBytes(arr);
+            //    var nonce = Convert.ToBase64String(arr);
+
+            //    services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+            //        .AddDiscord(x =>
+            //        {
+            //            x.SignInScheme = "Identity.External";
+            //            x.ClaimsIssuer = DiscordAuthenticationDefaults.Issuer;
+            //            x.ReturnUrlParameter = "/";
+            //            x.AccessDeniedPath = "/";
+            //            x.ClientId = clientid;
+            //            x.ClientSecret = clientsecret;
+            //            x.TokenEndpoint = DiscordAuthenticationDefaults.TokenEndpoint;
+            //            x.AuthorizationEndpoint = $"{DiscordAuthenticationDefaults.AuthorizationEndpoint}?response_type=code&client_id={clientid}&scope=identify&state={nonce}&redirect_uri={this._config.DiscordOAuthSettings.RedirectUri}";
+            //            x.UserInformationEndpoint = DiscordAuthenticationDefaults.UserInformationEndpoint;
+            //        });
+            //}
+            /*else */
+            services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme);
 
             services.ConfigureApplicationCookie(x =>
             {
@@ -213,19 +206,22 @@ namespace Chandler
 
             services.AddAntiforgery(x =>
             {
-                x.FormFieldName = "AntiForgeryToken";
-                x.HeaderName = "X-CRSF-TOKEN";
+                x.HeaderName = "X-XSRF-TOKEN";
+                x.FormFieldName = "X-XSRF-TOKEN";
+                x.Cookie.HttpOnly = false;
+                x.Cookie.IsEssential = true;
+                x.SuppressXFrameOptionsHeader = false;
             });
 
             #endregion
 
             services.AddMvc(x => x.EnableEndpointRouting = false)
                 .SetCompatibilityVersion(CompatibilityVersion.Version_3_0)
-                .AddControllersAsServices();
+                .AddControllersAsServices()
+                .AddNToastNotifyToastr();
 
-            services.AddTransient<AccountHelper>();
-
-            services.AddSingleton(new DbActionHelper(this._db));
+            services.AddSingleton<ThreadRepository>();
+            services.AddSingleton(this.ServerConfig);
             #endregion
         }
 
@@ -237,6 +233,8 @@ namespace Chandler
             app.UseAuthentication();
             app.UseIpRateLimiting();
 
+            app.UseNToastNotify();
+
             app.UseSwagger();
             app.UseSwaggerUI(x =>
             {
@@ -246,12 +244,6 @@ namespace Chandler
 
             app.UseCors("publicpolicy");
             app.UseStaticFiles();
-
-            app.UseFileServer(new FileServerOptions()
-            {
-                FileProvider = new PhysicalFileProvider(resfolderpath),
-                RequestPath = "/res"
-            });
 
             app.UseMvc(routes =>
             {

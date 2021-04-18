@@ -1,4 +1,6 @@
 ﻿using Chandler.Data.Entities;
+using Domain.EF.Entities.Main;
+using Domain.Misc;
 
 namespace Chandler.Models
 {

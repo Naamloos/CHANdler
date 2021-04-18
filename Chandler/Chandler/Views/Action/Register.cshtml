@@ -1,4 +1,4 @@
-﻿@model Chandler.ServerConfig
+﻿@*@model Chandler.ServerConfig
 <!--TEMP PLACEHOLDER PAGE-->
 
 <div id="addwh">
@@ -16,18 +16,4 @@
     <br />
     <br />
     <a href="/" style="margin-left:47%;">Back to Home</a>
-</div>
-
-@* This part defines the metadata stuff. *@
-@section metadata
-{
-    @await Html.PartialAsync("_Metadata", new MetadataViewModel()
-    {
-        Title = $"{Model.SiteConfig.SiteName} - Register",
-        Config = Model,
-        Description = $"Login page for {Model.SiteConfig.SiteName}",
-        Image = Model.SiteConfig.SiteLogo,
-        ImageRelative = true,
-        RelativeUrl = Url.RouteUrl(ViewContext.RouteData.Values)
-    })
-}
+</div>*@

@@ -1,4 +1,4 @@
-﻿@model Chandler.ServerConfig
+﻿@*@model Chandler.ServerConfig
 <!--TEMP PLACEHOLDER PAGE-->
 
 <div style="text-align:center;">
@@ -16,18 +16,4 @@
     <br />
     <br />
 </div>
-<a href="/" style="margin-left:47%;">Back to Home</a>
-
-@* This part defines the metadata stuff. *@
-@section metadata
-{
-    @await Html.PartialAsync("_Metadata", new MetadataViewModel()
-    {
-        Title = $"{Model.SiteConfig.SiteName} - Delete",
-        Config = Model,
-        Description = $"Delete page for {Model.SiteConfig.SiteName}",
-        Image = Model.SiteConfig.SiteLogo,
-        ImageRelative = true,
-        RelativeUrl = Url.RouteUrl(ViewContext.RouteData.Values)
-    })
-}
+<a href="/" style="margin-left:47%;">Back to Home</a>*@

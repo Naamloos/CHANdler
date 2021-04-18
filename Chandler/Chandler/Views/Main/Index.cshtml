@@ -1,15 +1,5 @@
 ﻿@model IndexPageModel
 
-@if (Model.ActionStatus != null && Model.ActionStatus?.ResponseCode != 200)
-{
-    <div class="alert">
-        <h2>Attention</h2>
-        <span class="closebtn" onclick="this.parentElement.style.display='none';">&times;</span>
-        <br />
-        <strong>@Model.ActionStatus.Title:</strong> @Model.ActionStatus.Message
-    </div>
-}
-
 <div id="home">
     <img id="sitelogo" src="@Model.Config.SiteConfig.SiteLogo">
     <h1 id="sitename">@Model.Config.SiteConfig.SiteName</h1>
@@ -30,17 +20,3 @@
         <a href="https://raw.githubusercontent.com/Naamloos/CHANdler/master/LICENSE">License</a>
     </div>
 </div>
-
-@* This part defines the metadata stuff. *@
-@section metadata
-{
-    @await Html.PartialAsync("_Metadata", new MetadataViewModel()
-    {
-        Title = $"{Model.Config.SiteConfig.SiteName} - Home",
-        Config = Model.Config,
-        Description = "",
-        Image = Model.Config.SiteConfig.SiteLogo,
-        ImageRelative = true,
-        RelativeUrl = Url.RouteUrl(ViewContext.RouteData.Values)
-    })
-}

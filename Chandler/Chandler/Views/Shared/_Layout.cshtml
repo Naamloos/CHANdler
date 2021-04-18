@@ -7,18 +7,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="stylesheet" type="text/css" href="~/css/main.min.css" />
     <link href="https://fonts.googleapis.com/css?family=Tinos" rel="stylesheet">
-    <link rel="icon" type="image/x-icon" href="/res/favicon.ico">
-    @RenderSection("metadata")
+    <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
+
+    @*@await Html.PartialAsync("_Metadata", new MetadataViewModel()
+    {
+        Title = ViewBag.Title,
+        Config = Model,
+        Description = ViewBag.Description,
+        Image = Model.SiteConfig.SiteLogo,
+        ImageRelative = true,
+        RelativeUrl = Url.RouteUrl(ViewContext.RouteData.Values)
+    })*@
 </head>
 <body>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js" integrity="sha512-VEd+nq25CkR676O+pLBnDW09R7VQX9Mdiij052gVCp5yVH3jGtH70Ho/UUv4mJDsEdTvqRCFZg0NKGiojGnUCw==" crossorigin="anonymous"></script>
+    <script type="text/javascript" src="~/js/linkify.js"></script>
+
+    @RenderSection("toast", required: false)
     @{
         if (!this.User.Identity?.IsAuthenticated ?? false)
         {
             <div class="navbar">
-                    <ul class="navbar-data">
-                        <li class="navbar-item"><a class="navbar-item-link" href="/Login">Login</a></li>
-                        <li class="navbar-item"><a class="navbar-item-link" href="/Register">Register</a></li>
-                    </ul>
+                <ul class="navbar-data">
+                    <li class="navbar-item"><a class="navbar-item-link" href="/Login">Login</a></li>
+                    <li class="navbar-item"><a class="navbar-item-link" href="/Register">Register</a></li>
+                </ul>
             </div>
         }
         else
@@ -32,7 +46,10 @@
             </div>
         }
     }
+
+    @await Html.PartialAsync("_ValidationScriptsPartial.cshtml")
+    @await Component.InvokeAsync("NToastNotify")
+
     @RenderBody()
-    <script type="text/javascript" src="~/js/linkify.js"></script>
 </body>
 </html>

@@ -34,9 +34,9 @@
             <div class="threadtext">
                 <div style="white-space: pre-line">
                     @{
-                        if (mainthread.Image != null)
+                        if (mainthread.ImageUrl != null)
                         {
-                            <img class="imgsmall" onclick="imgclick(this)" src="@mainthread.Image">
+                            <img class="imgsmall" onclick="imgclick(this)" src="@mainthread.ImageUrl">
                         }
                         <p class="_linkify">@mainthread.Text</p>
                         <p>
@@ -88,10 +88,10 @@
             meta.Title += $"Thread by: {Model.Thread.Username}";
         }
 
-        if (!string.IsNullOrEmpty(this.Model.Thread.Image))
+        if (!string.IsNullOrEmpty(this.Model.Thread.ImageUrl))
         {
             meta.ImageRelative = false;
-            meta.Image = this.Model.Thread.Image;
+            meta.Image = this.Model.Thread.ImageUrl;
         }
 
         @await Html.PartialAsync("_Metadata", meta)

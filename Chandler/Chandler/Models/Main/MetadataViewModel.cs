@@ -1,4 +1,6 @@
-﻿namespace Chandler.Models
+﻿using Domain.Misc;
+
+namespace Chandler.Models
 {
     /// <summary>
     /// This model gets used in the partial view for metadata
