@@ -12,7 +12,7 @@
     margin: 0;
 }
 
-body {
+.main-body {
     color: lightgray;
     background-color: var(--body-colour);
     font-family: arial,helvetica,sans-serif;
@@ -189,24 +189,24 @@ option {
     border-radius: 3px;
 }
 
-.navbar-data {
+.nav-data {
     list-style-type: none;
     overflow: hidden;
     margin: 0;
     padding: 0;
 }
 
-.navbar-item {
+.nav-item {
     display: inline;
     float: left;
     padding: 0px 2% 0px 2%;
 }
 
-.navbar-item a.navbar-item-link:hover {
+.nav-item a.nav-item-link:hover {
     background-color: var(--link-colour);
 }
 
-.navbar-item-link {
+.nav-item-link {
     color: white;
     text-decoration: none;
     display: block;
@@ -221,4 +221,8 @@ option {
     padding: 8px;
     text-align: center;
     padding: 14px 16px;
+}
+
+.dark-input {
+    background-color: var(--secondary-bg-colour) !important;
 }

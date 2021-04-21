@@ -1,7 +1,6 @@
-﻿using Chandler.Data.Entities;
-using Domain.EF.Entities.Main;
+﻿using Domain.EF.Entities.Main;
 using Domain.Misc;
-using System.Collections.Generic;
+using System.Linq;
 
 namespace Chandler.Models
 {
@@ -13,7 +12,7 @@ namespace Chandler.Models
         /// <summary>
         /// List of avaliable board
         /// </summary>
-        public IEnumerable<Board> Boards { get; set; }
+        public IQueryable<Board> Boards { get; set; }
 
         /// <summary>
         /// Configuration for the server

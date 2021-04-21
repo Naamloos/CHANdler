@@ -48,7 +48,7 @@ namespace Chandler.Controllers
         /// </summary>
         /// <returns>Login Page View</returns>
         [HttpGet("login"), AllowAnonymous]
-        public IActionResult Login() => this.View("/Views/Action/Login.cshtml", new LoginViewModel()
+        public IActionResult Login() => this.View("/Views/Account/Login.cshtml", new LoginViewModel()
         {
             ServerConfig = this.Config
         });
@@ -71,7 +71,7 @@ namespace Chandler.Controllers
         /// </summary>
         /// <returns>Returns register page</returns>
         [HttpGet("register"), AllowAnonymous]
-        public IActionResult Register() => this.View("/Views/Action/Register.cshtml", this.Config);
+        public IActionResult Register() => this.View("/Views/Account/Register.cshtml", this.Config);
 
         ///// <summary>
         ///// Register via form
@@ -101,7 +101,7 @@ namespace Chandler.Controllers
         ///// </summary>
         ///// <returns>DeleteAccount Page</returns>
         //[Route("userdelete"), HttpGet, Authorize]
-        //public IActionResult Delete() => this.View("/Views/Action/DeleteAccount.cshtml", this.Config);
+        //public IActionResult Delete() => this.View("/Views/Account/DeleteAccount.cshtml", this.Config);
 
         ///// <summary>
         ///// Deletes account

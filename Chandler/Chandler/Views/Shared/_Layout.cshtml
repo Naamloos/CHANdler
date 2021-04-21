@@ -5,49 +5,64 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="description" content="Get a load of this guy - Best Open source board server software" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="stylesheet" type="text/css" href="~/css/main.min.css" />
+    <link rel="stylesheet" type="text/css" href="~/css/main.css" />
     <link href="https://fonts.googleapis.com/css?family=Tinos" rel="stylesheet">
     <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/switchery/0.8.2/switchery.min.css" integrity="sha512-uyGg6dZr3cE1PxtKOCGqKGTiZybe5iSq3LsqOolABqAWlIRLo/HKyrMMD8drX+gls3twJdpYX0gDKEdtf2dpmw==" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
 
     @*@await Html.PartialAsync("_Metadata", new MetadataViewModel()
-    {
-        Title = ViewBag.Title,
-        Config = Model,
-        Description = ViewBag.Description,
-        Image = Model.SiteConfig.SiteLogo,
-        ImageRelative = true,
-        RelativeUrl = Url.RouteUrl(ViewContext.RouteData.Values)
-    })*@
+        {
+            Title = ViewBag.Title,
+            Config = Model,
+            Description = ViewBag.Description,
+            Image = Model.SiteConfig.SiteLogo,
+            ImageRelative = true,
+            RelativeUrl = Url.RouteUrl(ViewContext.RouteData.Values)
+        })*@
 </head>
-<body>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<body class="main-body">
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js" integrity="sha512-VEd+nq25CkR676O+pLBnDW09R7VQX9Mdiij052gVCp5yVH3jGtH70Ho/UUv4mJDsEdTvqRCFZg0NKGiojGnUCw==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/switchery/0.8.2/switchery.min.js" integrity="sha512-lC8vSUSlXWqh7A/F+EUS3l77bdlj+rGMN4NB5XFAHnTR3jQtg4ibZccWpuSSIdPoPUlUxtnGktLyrWcDhG8RvA==" crossorigin="anonymous"></script>
     <script type="text/javascript" src="~/js/linkify.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            var elementList = document.querySelectorAll(".switchery");
+            elementList.forEach(function (e) { new Switchery(e); });
+
+            elementList = document.querySelectorAll(".switchery-small");
+            elementList.forEach(function (e) { new Switchery(e, { size: 'small' }); });
+        });
+    </script>
+
+    @await Html.PartialAsync("_ValidationScriptsPartial.cshtml")
 
     @RenderSection("toast", required: false)
+
     @{
-        if (!this.User.Identity?.IsAuthenticated ?? false)
+        if (!this.User.Identity.IsAuthenticated)
         {
-            <div class="navbar">
-                <ul class="navbar-data">
-                    <li class="navbar-item"><a class="navbar-item-link" href="/Login">Login</a></li>
-                    <li class="navbar-item"><a class="navbar-item-link" href="/Register">Register</a></li>
+            <div class="nav">
+                <ul class="nav-data">
+                    <li class="nav-item"><a class="nav-item-link" href="/Account/Login">Login</a></li>
+                    <li class="nav-item"><a class="nav-item-link" href="/Account/Register">Register</a></li>
                 </ul>
             </div>
         }
         else
         {
-            <div class="navbar">
-                <ul class="navbar-data">
-                    <li class="navbar-item"><p class="nav-pel">Logged in as: @this.User.Identity.Name</p></li>
-                    <li class="navbar-item"><a class="navbar-item-link" href="/userdelete">Delete Account</a></li>
-                    <li class="navbar-item"><a class="navbar-item-link" href="/account/Logout">Logout</a></li>
+            <div class="nav">
+                <ul class="nav-data">
+                    <li class="nav-item"><p class="nav-pel">Logged in as: @this.User.Identity.Name</p></li>
+                    <li class="nav-item"><a class="nav-item-link" href="/Account/Delete">Delete Account</a></li>
+                    <li class="nav-item"><a class="nav-item-link" href="/account/Logout">Logout</a></li>
                 </ul>
             </div>
         }
     }
-
-    @await Html.PartialAsync("_ValidationScriptsPartial.cshtml")
     @await Component.InvokeAsync("NToastNotify")
 
     @RenderBody()

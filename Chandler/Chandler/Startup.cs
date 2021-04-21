@@ -1,9 +1,5 @@
 ﻿#pragma warning disable CS1591
 
-using AspNet.Security.OAuth.Discord;
-using AspNetCoreRateLimit;
-using Chandler.Data;
-using Chandler.Data.Entities;
 using Domain.EF.Entities;
 using Domain.EF.Entities.Main;
 using Domain.Misc;
@@ -11,21 +7,17 @@ using Domain.Repositories;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.FileProviders;
 using Microsoft.OpenApi.Models;
 using Newtonsoft.Json;
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Reflection;
-using System.Security.Cryptography;
 using System.Text;
 
 namespace Chandler
@@ -60,21 +52,6 @@ namespace Chandler
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            #region AspNetCoreRateLimit Stuff
-            //Taken from https://github.com/stefanprodan/AspNetCoreRateLimit/wiki/IpRateLimitMiddleware#setup
-            services.AddOptions();
-            services.AddMemoryCache();
-
-            services.Configure<IpRateLimitOptions>(Configuration.GetSection("IpRateLimiting"));
-            services.Configure<IpRateLimitPolicies>(Configuration.GetSection("IpRateLimitPolicies"));
-
-            services.AddSingleton<IIpPolicyStore, MemoryCacheIpPolicyStore>();
-            services.AddSingleton<IRateLimitCounterStore, MemoryCacheRateLimitCounterStore>();
-
-            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-            services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
-            #endregion
-
             #region General Chandler Stuff
 
             services.AddSwaggerGen(x =>
@@ -101,52 +78,6 @@ namespace Chandler
             }));
 
             services.AddRazorPages().AddRazorRuntimeCompilation();
-
-            //if (this._db.Boards.Count() == 0)
-            //{
-            //    // insert debug thread data to database
-            //    this._db.Boards.Add(new Board()
-            //    {
-            //        Name = "CHANdler",
-            //        Tag = "c",
-            //        Description = "CHANdler test board",
-            //        ImageUrl = "/res/logo.jpg"
-            //    });
-
-            //    this._db.Boards.Add(new Board()
-            //    {
-            //        Name = "Random",
-            //        Tag = "r",
-            //        Description = "Random shit",
-            //    });
-
-            //    this._db.Boards.Add(new Board()
-            //    {
-            //        Name = "Memes",
-            //        Tag = "m",
-            //        ImageUrl = "/res/pepo.gif",
-            //        Description = "haha cool and good dank memes",
-            //    });
-
-            //    this._db.Boards.Add(new Board()
-            //    {
-            //        Name = "Meta",
-            //        Tag = "meta",
-            //        ImageUrl = "/res/wrench.png",
-            //        Description = "About CHANdler itself, e.g. development talk.",
-            //    });
-
-            //    (var hash, var salt) = Passworder.GenerateHash(this._config.SiteConfig.DefaultPassword, this._config.SiteConfig.DefaultPassword);
-
-            //    this._db.Passwords.Add(new Password()
-            //    {
-            //        Id = -1,
-            //        Hash = hash,
-            //        Salt = salt
-            //    });
-
-            //    this._db.SaveChanges();
-            //}
 
             #region Auth and Forgery
 
@@ -197,9 +128,9 @@ namespace Chandler
 
             services.ConfigureApplicationCookie(x =>
             {
-                x.LoginPath = "/login";
-                x.LogoutPath = "/logout";
-                x.AccessDeniedPath = "/";
+                x.LoginPath = "/account/login";
+                x.LogoutPath = "/account/logout";
+                x.AccessDeniedPath = "/account/login";
                 x.ExpireTimeSpan = TimeSpan.FromDays(1);
                 x.SlidingExpiration = true;
             });
@@ -220,7 +151,8 @@ namespace Chandler
                 .AddControllersAsServices()
                 .AddNToastNotifyToastr();
 
-            services.AddSingleton<ThreadRepository>();
+            services.AddScoped<ThreadRepository>();
+            services.AddScoped<BoardRepository>();
             services.AddSingleton(this.ServerConfig);
             #endregion
         }
@@ -230,8 +162,12 @@ namespace Chandler
         {
             if (env.EnvironmentName == "Development") app.UseDeveloperExceptionPage();
 
+            //Just create the fucking tables you pile of donkey horse shit
+            var ctx = app.ApplicationServices.CreateScope().ServiceProvider.GetRequiredService<ChandlerContext>();
+            ctx.Database.EnsureCreated();
+
             app.UseAuthentication();
-            app.UseIpRateLimiting();
+            app.UseAuthorization();
 
             app.UseNToastNotify();
 
@@ -249,7 +185,7 @@ namespace Chandler
             {
                 routes.MapRoute(
                     name: "Default",
-                    template: "{controller=Page}/{Action=Index}");
+                    template: "{controller=Home}/{Action=Index}");
             });
         }
     }

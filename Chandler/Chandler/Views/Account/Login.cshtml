@@ -1,0 +1,49 @@
+﻿@model LoginViewModel
+@{
+    ViewBag.Title = $"{Model.ServerConfig.SiteConfig.SiteName} - Login";
+    ViewBag.Description = $"Login page for {Model.ServerConfig.SiteConfig.SiteName}";
+}
+
+<div id="addwh">
+    <br />
+    <br />
+    <br />
+    <br />
+    <div id="newpost" class="phdiv">
+        <form id="phform" method="post" action="/account/login" style="overflow:auto;">
+            @Html.ValidationSummary(true)
+            @Html.AntiForgeryToken()
+
+            <div class="form-group">
+                @Html.TextBoxFor(x => x.Username, new { @class = "required form-control dark-input", placeholder = "Username" })
+                @Html.ValidationMessageFor(x => x.Username, null, new { @class = "text-danger" })
+            </div>
+            
+            <br />
+            
+            <div class="form-group">
+                @Html.TextBoxFor(x => x.Password, new { @class = "required form-control dark-input", type = "password", placeholder = "Password" })
+                @Html.ValidationMessageFor(x => x.Password, null, new { @class = "text-danger" })
+            </div>
+            
+            <br />
+            
+            <div class="form-group">
+                <label>Remember Me? </label>
+                @Html.CheckBoxFor(x => x.RememberMe, new { @class = "switchery-small" })
+            </div>
+            
+            <div class="form-group">
+                <button type="submit" class="btn btn-success btn-xs float-right">Login</button>
+            </div>
+        </form>
+        <br>
+    </div>
+    <br />
+    <br />
+    <a href="/" style="margin-left:47%;">Back to Home</a>
+    @*@if (Model.DiscordOAuthSettings != null)
+        {
+            <a href="/login/discord">Login using discord</a>
+        }*@
+</div>

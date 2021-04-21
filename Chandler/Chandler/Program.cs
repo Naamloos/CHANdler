@@ -26,11 +26,6 @@ namespace Chandler
             }
 
             var webhost = CreateWebHostBuilder(args).Build();
-
-            using var scope = webhost.Services.CreateScope();
-            var ipPolicyStore = scope.ServiceProvider.GetRequiredService<IIpPolicyStore>();
-            await ipPolicyStore.SeedAsync();
-
             await webhost.RunAsync();
         }
 

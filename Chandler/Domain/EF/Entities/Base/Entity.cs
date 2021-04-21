@@ -8,6 +8,6 @@ namespace Domain.EF.Entities.Base
         protected Entity() { }
 
         [Key]
-        public Guid Id { get; private set; }
+        public Guid Id { get; set; }
     }
 }
