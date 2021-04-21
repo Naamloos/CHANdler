@@ -3,16 +3,9 @@ CHANdler is image board software using ASP.NET Core MVC
 
 ![](https://i.kym-cdn.com/photos/images/newsfeed/000/779/388/d33.jpg)
 
-## API Documentation
-API Documentation is now avaliable at `/docs`.
-
-A live version of the docs can be found at: https://chandler.li223.dev/docs
-
-Alternate link for live docs is: https://chandler.naamloos.dev/docs
-
 ## Setup
 ### Images
-Images can be self hosted and placed in `/res`
+Images can be self hosted and placed in the WWWRoot under `/images`
 
 ### Configuration
 The configuration file is set out like so:
@@ -69,6 +62,3 @@ The configuration file is set out like so:
 `clientsecret` is the Application Secret.
 
 `redirecturi` is the URI to redirect to after signning in.
-
-## Cool stuff with CHANdler
-[ChandlerSharpPlus](https://github.com/li223/ChandlerSharpPlus) by [Li223](https://github.com/li223)
