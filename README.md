@@ -1,11 +1,13 @@
 # ***Rewrite***
-This project is currently going under a rewrite. If you want to do any changes or PRing, please do so on the new rewrite branch. 
-The master branch is basically dead until rewrite gets merged over.
+This branch (`Joey`) is yet another rewrite of CHANdler.
 
 # CHANdler
-CHANdler is image board software using ASP.NET Core MVC
+CHANdler is image board software using ASP.NET Core for the back-end, and React.JS for the front-end.
 
 ![](https://i.kym-cdn.com/photos/images/newsfeed/000/779/388/d33.jpg)
+
+------------------------------------------------
+# The following contents are not yet up to date, take this info with a grain of salt.
 
 ## API Documentation
 API Documentation is now avaliable at `/docs`.
