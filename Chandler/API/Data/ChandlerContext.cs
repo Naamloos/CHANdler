@@ -5,10 +5,9 @@ namespace Data
 {
     public class ChandlerContext : DbContext
     {
-        private string _connectionString;
+        public ChandlerContext() { }
 
-        public ChandlerContext(string connectionString)
-            => _connectionString = connectionString;
+        public ChandlerContext(DbContextOptions options) : base(options) { }
 
         protected override void OnModelCreating(ModelBuilder builder) => builder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
     }
