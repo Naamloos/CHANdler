@@ -1,6 +1,8 @@
 using API.SwaggerObjects;
+using Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System.Reflection;
@@ -14,6 +16,11 @@ namespace API
             var builder = WebApplication.CreateBuilder(args);
 
             builder.Services.AddAuthorization();
+
+            builder.Services.AddDbContext<ChandlerContext>(options =>
+            {
+                options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
+            });
 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
